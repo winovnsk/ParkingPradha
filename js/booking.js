@@ -1,5 +1,6 @@
 /**
- * Booking Module — Wizard Step-by-Step
+ * Booking Module — Wizard Step-by-Step (FIXED)
+ * Perbaikan: Handle berbagai format diskon (desimal, persentase, angka)
  */
 const Booking = (() => {
   let state = {
@@ -16,8 +17,57 @@ const Booking = (() => {
     settings: {}
   };
 
+  /**
+   * Helper function untuk parse nilai diskon
+   * Mendukung format: "15%", "15", "0.15"
+   * @param {string|number} discVal - Nilai diskon dari database
+   * @param {number} rawTotal - Total harga sebelum diskon
+   * @returns {{ discountAmount: number, discDisplayVal: string }}
+   */
+  function parseDiscount(discVal, rawTotal) {
+    const discStr = discVal?.toString().trim() || '0';
+    let discountAmount = 0;
+    let discDisplayVal = '0';
+
+    if (discStr.endsWith('%')) {
+      // Format: "15%", "10%", dll
+      const pct = parseFloat(discStr.replace('%', ''));
+      if (!isNaN(pct) && pct > 0) {
+        discountAmount = rawTotal * (pct / 100);
+        discDisplayVal = `${pct}%`;
+      }
+    } else {
+      const numVal = parseFloat(discStr);
+      if (!isNaN(numVal) && numVal > 0) {
+        if (numVal >= 1) {
+          // Format: "15" (angka tanpa %), anggap sebagai persentase
+          discountAmount = rawTotal * (numVal / 100);
+          discDisplayVal = `${numVal}%`;
+        } else {
+          // Format: "0.15" (desimal), sudah dalam bentuk pecahan
+          discountAmount = rawTotal * numVal;
+          discDisplayVal = `${Math.round(numVal * 100)}%`;
+        }
+      }
+    }
+
+    return { discountAmount, discDisplayVal };
+  }
+
   function start(preferredType) {
-    state = { step: 1, type: preferredType || null, selectedSpots: [], duration: 1, totalPrice: 0, discount: 0, finalTotal: 0, file: null, fileBase64: null, spots: [], settings: {} };
+    state = { 
+      step: 1, 
+      type: preferredType || null, 
+      selectedSpots: [], 
+      duration: 1, 
+      totalPrice: 0, 
+      discount: 0, 
+      finalTotal: 0, 
+      file: null, 
+      fileBase64: null, 
+      spots: [], 
+      settings: {} 
+    };
 
     if (!Auth.isLoggedIn()) {
       Auth.showLoginModal();
@@ -137,9 +187,15 @@ const Booking = (() => {
       const active = state.duration === d ? 'btn-primary' : 'btn-outline';
       const discKey = `DISKON_${d}`;
       const discVal = state.settings[discKey]?.value || '0';
-      const discLabel = discVal !== '0' ? `<span style="color:var(--danger);font-weight:700"> -${discVal}</span>` : '';
+      
+      // === PERBAIKAN: Gunakan helper function ===
+      const { discDisplayVal } = parseDiscount(discVal, 0);
+      const discLabel = discDisplayVal !== '0' 
+        ? ` <span style="color:var(--danger);font-weight:700">-${discDisplayVal}</span>` 
+        : '';
+
       return `<button class="btn ${active}" onclick="Booking.setDuration(${d})" style="flex:1;min-width:100px">
-        ${d} Bulan ${discLabel}
+        ${d} Bulan${discLabel}
       </button>`;
     }).join('');
 
@@ -164,14 +220,9 @@ const Booking = (() => {
 
     const discKey = `DISKON_${state.duration}`;
     const discVal = state.settings[discKey]?.value || '0';
-    let discountAmount = 0;
-
-    if (discVal.toString().endsWith('%')) {
-      const pct = parseFloat(discVal.replace('%', ''));
-      discountAmount = rawTotal * (pct / 100);
-    } else {
-      discountAmount = Number(discVal);
-    }
+    
+    // === PERBAIKAN: Gunakan helper function ===
+    const { discountAmount, discDisplayVal } = parseDiscount(discVal, rawTotal);
 
     state.totalPrice = rawTotal;
     state.discount = discountAmount;
@@ -187,7 +238,6 @@ const Booking = (() => {
     // Get bank info
     let bankHtml = '<p style="font-size:0.85rem;color:var(--text-secondary)">Memuat info rekening...</p>';
     try {
-      const bankKeys = ['BANK_BCA_NO', 'BANK_BCA_NAME', 'BANK_BRI_NO', 'BANK_BRI_NAME', 'BANK_DANA_NO', 'BANK_DANA_NAME'];
       const banks = [];
       if (state.settings['BANK_BCA_NO']) banks.push({ name: 'BCA', no: state.settings['BANK_BCA_NO'].value, holder: state.settings['BANK_BCA_NAME']?.value || '' });
       if (state.settings['BANK_BRI_NO']) banks.push({ name: 'BRI', no: state.settings['BANK_BRI_NO'].value, holder: state.settings['BANK_BRI_NAME']?.value || '' });
@@ -209,7 +259,7 @@ const Booking = (() => {
       ${spotsDetail}
       ${state.discount > 0 ? `
         <div style="display:flex;justify-content:space-between;padding:0.5rem 0;color:var(--success)">
-          <span>Diskon (${discVal})</span>
+          <span>Diskon (${discDisplayVal})</span>
           <span>-${Utils.formatCurrency(state.discount)}</span>
         </div>` : ''}
       <div style="display:flex;justify-content:space-between;padding:0.75rem 0;font-size:1.2rem;font-weight:800;border-top:2px solid var(--text-primary)">
