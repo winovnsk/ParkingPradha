@@ -274,8 +274,9 @@ const Booking = (() => {
     const file = input.files[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      Utils.showToast('Ukuran file maksimal 5MB.', 'warning');
+    const validation = Utils.validateUploadFile(file);
+    if (!validation.ok) {
+      Utils.showToast(validation.message, 'warning');
       return;
     }
 
@@ -315,6 +316,11 @@ const Booking = (() => {
       };
 
       const res = await API.createBooking(payload);
+      if (res.success && res.data?.bukti_url === 'UPLOAD_FAILED') {
+        Utils.showToast('Upload bukti ke server gagal. Silakan coba ulang dengan file lain.', 'error');
+        return;
+      }
+
       if (res.success) {
         state.step = 5;
         state.result = res.data;

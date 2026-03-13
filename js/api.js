@@ -2,8 +2,11 @@
  * API Module — Semua komunikasi ke Google Apps Script
  */
 const API = (() => {
-  // ⚠️ GANTI URL INI dengan URL deploy Google Apps Script Anda
-  const BASE_URL = 'https://script.google.com/macros/s/AKfycbzRDhmrkicsq1GX_wJuMJT3dRBCu8bwS0Kv0SveUKzUOcChg3cVKVXkc5huilw02KqU/exec';
+  const DEFAULT_BASE_URL = 'https://script.google.com/macros/s/AKfycbzRDhmrkicsq1GX_wJuMJT3dRBCu8bwS0Kv0SveUKzUOcChg3cVKVXkc5huilw02KqU/exec';
+  // Bisa override via window.APP_CONFIG.API_BASE_URL jika endpoint backend berubah
+  const BASE_URL = (window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL
+    ? window.APP_CONFIG.API_BASE_URL
+    : DEFAULT_BASE_URL).toString().trim();
 
   async function get(action, params = {}) {
     const url = new URL(BASE_URL);

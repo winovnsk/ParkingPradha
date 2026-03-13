@@ -3,6 +3,25 @@
  */
 const Utils = (() => {
 
+
+  const MAX_UPLOAD_SIZE_BYTES = 5 * 1024 * 1024;
+
+  function validateUploadFile(file, { maxSizeBytes = MAX_UPLOAD_SIZE_BYTES } = {}) {
+    if (!file) return { ok: false, message: 'File tidak ditemukan.' };
+
+    const allowedTypes = ['image/', 'application/pdf'];
+    const isAllowed = allowedTypes.some(t => file.type && file.type.startsWith(t));
+    if (!isAllowed) {
+      return { ok: false, message: 'Format file harus JPG, PNG, atau PDF.' };
+    }
+
+    if (file.size > maxSizeBytes) {
+      return { ok: false, message: 'Ukuran file maksimal 5MB.' };
+    }
+
+    return { ok: true };
+  }
+
   function formatCurrency(num) {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency', currency: 'IDR',
@@ -163,6 +182,6 @@ const Utils = (() => {
     formatCurrency, formatDate, formatShortDate,
     getInitials, renderStars, showToast,
     compressImage, setLoading, getMonthOptions,
-    parseDiscountValue
+    parseDiscountValue, validateUploadFile, MAX_UPLOAD_SIZE_BYTES
   };
 })();

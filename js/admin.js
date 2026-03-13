@@ -239,6 +239,12 @@ const Admin = (() => {
   async function _handleInvFile(input) {
     const file = input.files[0];
     if (!file) return;
+    const validation = Utils.validateUploadFile(file);
+    if (!validation.ok) {
+      Utils.showToast(validation.message, 'warning');
+      return;
+    }
+
     _invFileName = file.name;
     document.getElementById('invFileName').textContent = file.name;
     try {
@@ -265,6 +271,11 @@ const Admin = (() => {
         bukti_transfer_base64: _invBase64,
         bukti_filename: _invFileName
       });
+      if (res.success && res.data?.bukti_url === 'UPLOAD_FAILED') {
+        Utils.showToast('Upload bukti ke server gagal. Silakan coba ulang dengan file lain.', 'error');
+        return;
+      }
+
       Utils.showToast(res.message, res.success ? 'success' : 'error');
       if (res.success) {
         App.closeModal();

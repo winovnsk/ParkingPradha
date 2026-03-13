@@ -185,6 +185,12 @@ const Dashboard = (() => {
     Dashboard._handleExtFile = async (input) => {
       const file = input.files[0];
       if (!file) return;
+      const validation = Utils.validateUploadFile(file);
+      if (!validation.ok) {
+        Utils.showToast(validation.message, 'warning');
+        return;
+      }
+
       fileName = file.name;
       try {
         fileBase64 = await Utils.compressImage(file);
@@ -206,6 +212,11 @@ const Dashboard = (() => {
           bukti_transfer_base64: fileBase64,
           bukti_filename: fileName
         });
+
+        if (res.success && res.data?.bukti_url === 'UPLOAD_FAILED') {
+          Utils.showToast('Upload bukti ke server gagal. Silakan coba ulang dengan file lain.', 'error');
+          return;
+        }
 
         if (res.success) {
           App.closeModal();
