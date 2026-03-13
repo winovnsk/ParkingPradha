@@ -39,14 +39,12 @@
           <li><a href="#" data-nav="reviews" onclick="App.navigate('reviews')"><i class="fas fa-star"></i> Ulasan</a></li>
           <li><a href="#" data-nav="faq" onclick="App.navigate('faq')"><i class="fas fa-question-circle"></i> FAQ</a></li>
 
-          <!-- Tombol Login -->
           <li id="nav-login-btn">
             <a href="#" class="btn btn-primary btn-sm" onclick="Auth.showLoginModal()">
               <i class="fas fa-sign-in-alt"></i> Masuk
             </a>
           </li>
 
-          <!-- User Dropdown -->
           <li class="nav-user-dropdown hidden" id="nav-user-btn">
             <a href="#" onclick="App.toggleUserMenu()" style="gap:0.5rem">
               <div class="nav-avatar" id="nav-user-avatar">U</div>
@@ -92,15 +90,11 @@
     </div>
   </div>
 
-  <!-- ══════════════════════════════════════════
-       MAIN CONTENT
-  ══════════════════════════════════════════ -->
   <main>
 
     <!-- ── PAGE: HOME ── -->
     <div class="page active" id="page-home">
 
-      <!-- HERO -->
       <section class="hero">
         <div class="hero-bg"></div>
         <div class="container">
@@ -167,7 +161,6 @@
         </div>
       </section>
 
-      <!-- FITUR -->
       <section class="section">
         <div class="container">
           <div class="section-header">
@@ -210,7 +203,6 @@
         </div>
       </section>
 
-      <!-- PAKET HARGA -->
       <section class="section section-alt">
         <div class="container">
           <div class="section-header">
@@ -255,7 +247,6 @@
         </div>
       </section>
 
-      <!-- LOKASI -->
       <section class="section">
         <div class="container">
           <div class="section-header">
@@ -275,7 +266,6 @@
         </div>
       </section>
 
-      <!-- ULASAN PREVIEW -->
       <section class="section section-alt">
         <div class="container">
           <div class="section-header">
@@ -317,15 +307,9 @@
             <span>Klik slot berwarna <strong>hijau (Tersedia)</strong> untuk langsung melakukan pemesanan parkir.</span>
           </div>
           <div class="spots-filter">
-            <button class="btn btn-sm btn-primary active" onclick="App.filterSpots('all', this)">
-              <i class="fas fa-th"></i> Semua Slot
-            </button>
-            <button class="btn btn-sm btn-ghost" onclick="App.filterSpots('Premium', this)">
-              <i class="fas fa-crown"></i> Premium
-            </button>
-            <button class="btn btn-sm btn-ghost" onclick="App.filterSpots('Regular', this)">
-              <i class="fas fa-bolt"></i> Regular
-            </button>
+            <button class="btn btn-sm btn-primary active" onclick="App.filterSpots('all', this)"><i class="fas fa-th"></i> Semua Slot</button>
+            <button class="btn btn-sm btn-ghost" onclick="App.filterSpots('Premium', this)"><i class="fas fa-crown"></i> Premium</button>
+            <button class="btn btn-sm btn-ghost" onclick="App.filterSpots('Regular', this)"><i class="fas fa-bolt"></i> Regular</button>
           </div>
           <div class="spots-grid" id="spotsGrid"></div>
         </div>
@@ -356,9 +340,7 @@
             <p>Pengalaman dari para penyewa parkir Pradha Ciganitri</p>
           </div>
           <div class="reviews-actions" style="text-align:center;margin-bottom:2rem">
-            <button class="btn btn-primary" onclick="App.showReviewForm()">
-              <i class="fas fa-pen"></i> Tulis Ulasan Anda
-            </button>
+            <button class="btn btn-primary" onclick="App.showReviewForm()"><i class="fas fa-pen"></i> Tulis Ulasan Anda</button>
           </div>
           <div class="reviews-list" id="reviewsList"></div>
         </div>
@@ -398,8 +380,8 @@
                 <i class="fas fa-chevron-down faq-icon"></i>
               </button>
               <div class="faq-answer">
-                <p><strong>Area Premium (Rp150.000/bulan):</strong> Dilengkapi kanopi pelindung dari hujan dan panas, pencahayaan LED terang, CCTV 24 jam, paving blok, dan patroli keamanan rutin.</p>
-                <p style="margin-top:0.5rem"><strong>Area Regular / SUTET (Rp50.000/bulan):</strong> Tersedia CCTV 24 jam, paving blok, dan patroli keamanan rutin. Tanpa kanopi dan pencahayaan LED.</p>
+                <p><strong>Area Premium (Rp150.000/bulan):</strong> Dilengkapi kanopi, LED, CCTV 24 jam, paving blok, dan patroli keamanan.</p>
+                <p style="margin-top:0.5rem"><strong>Area Regular / SUTET (Rp50.000/bulan):</strong> CCTV 24 jam, paving blok, dan patroli keamanan. Tanpa kanopi dan LED.</p>
               </div>
             </div>
             <div class="faq-item">
@@ -408,7 +390,7 @@
                 <i class="fas fa-chevron-down faq-icon"></i>
               </button>
               <div class="faq-answer">
-                <p>Proses verifikasi dilakukan oleh admin dalam waktu <strong>1×24 jam kerja</strong> setelah bukti transfer diterima. Anda akan mendapatkan konfirmasi melalui sistem dan status sewa akan berubah menjadi Aktif.</p>
+                <p>Proses verifikasi dilakukan oleh admin dalam waktu <strong>1×24 jam kerja</strong> setelah bukti transfer diterima.</p>
               </div>
             </div>
             <div class="faq-item">
@@ -417,13 +399,7 @@
                 <i class="fas fa-chevron-down faq-icon"></i>
               </button>
               <div class="faq-answer">
-                <p>Ya! Kami memberikan diskon menarik untuk sewa jangka panjang:</p>
-                <ul>
-                  <li>Sewa <strong>3 bulan</strong> — mendapatkan potongan harga</li>
-                  <li>Sewa <strong>6 bulan</strong> — potongan lebih besar</li>
-                  <li>Sewa <strong>12 bulan</strong> — diskon terbesar</li>
-                </ul>
-                <p style="margin-top:0.5rem">Besaran diskon dapat dilihat langsung pada tampilan nominal di langkah pemilihan durasi saat proses booking.</p>
+                <p>Ya! Semakin panjang durasi sewa, semakin besar diskonnya. Lihat detail saat proses booking.</p>
               </div>
             </div>
             <div class="faq-item">
@@ -432,15 +408,7 @@
                 <i class="fas fa-chevron-down faq-icon"></i>
               </button>
               <div class="faq-answer">
-                <p>Perpanjangan sewa dapat dilakukan melalui <strong>Dashboard</strong> akun Anda:</p>
-                <ol>
-                  <li>Masuk ke akun dan buka halaman Dashboard.</li>
-                  <li>Pada kartu sewa aktif, klik tombol <strong>"Perpanjang Sewa"</strong>.</li>
-                  <li>Pilih durasi perpanjangan yang diinginkan.</li>
-                  <li>Upload bukti transfer pembayaran.</li>
-                  <li>Tunggu konfirmasi dari admin.</li>
-                </ol>
-                <p style="margin-top:0.5rem">Disarankan untuk memperpanjang setidaknya <strong>7 hari sebelum</strong> masa sewa berakhir.</p>
+                <p>Buka Dashboard → klik "Perpanjang Sewa" pada kartu sewa aktif → pilih durasi → upload bukti transfer.</p>
               </div>
             </div>
             <div class="faq-item">
@@ -449,49 +417,43 @@
                 <i class="fas fa-chevron-down faq-icon"></i>
               </button>
               <div class="faq-answer">
-                <p>Nomor rekening tujuan transfer ditampilkan secara otomatis pada langkah <strong>"Ringkasan Tagihan"</strong> saat proses booking berlangsung. Tersedia pilihan bank BCA, BRI, dan DANA. Pastikan Anda mentransfer ke rekening yang benar dan menyimpan bukti transfer.</p>
+                <p>Nomor rekening ditampilkan otomatis pada langkah "Ringkasan Tagihan" saat booking. Tersedia BCA, BRI, dan DANA.</p>
               </div>
             </div>
             <div class="faq-item">
               <button class="faq-question" onclick="App.toggleFaq(this)">
-                <span><i class="fas fa-question-circle"></i> Apa yang terjadi jika pembayaran saya ditolak?</span>
+                <span><i class="fas fa-question-circle"></i> Apa yang terjadi jika pembayaran ditolak?</span>
                 <i class="fas fa-chevron-down faq-icon"></i>
               </button>
               <div class="faq-answer">
-                <p>Jika pembayaran ditolak, slot yang sudah Anda pilih akan dikembalikan ke status tersedia dan Anda dapat melakukan booking ulang. Penolakan biasanya terjadi karena:</p>
-                <ul>
-                  <li>Bukti transfer tidak jelas atau tidak valid</li>
-                  <li>Nominal transfer tidak sesuai</li>
-                  <li>Rekening tujuan tidak sesuai</li>
-                </ul>
-                <p style="margin-top:0.5rem">Hubungi admin melalui WhatsApp jika Anda membutuhkan bantuan lebih lanjut.</p>
+                <p>Slot dikembalikan ke status tersedia. Anda bisa booking ulang. Hubungi admin via WhatsApp jika butuh bantuan.</p>
               </div>
             </div>
             <div class="faq-item">
               <button class="faq-question" onclick="App.toggleFaq(this)">
-                <span><i class="fas fa-question-circle"></i> Bagaimana cara mereset password saya?</span>
+                <span><i class="fas fa-question-circle"></i> Bagaimana cara mereset password?</span>
                 <i class="fas fa-chevron-down faq-icon"></i>
               </button>
               <div class="faq-answer">
-                <p>Jika lupa password, klik tautan <strong>"Lupa Password?"</strong> pada halaman masuk. Anda akan diarahkan untuk menghubungi admin melalui WhatsApp. Admin akan membantu mereset password Anda setelah memverifikasi identitas.</p>
+                <p>Klik "Lupa Password?" di halaman masuk → Anda akan diarahkan ke WhatsApp admin.</p>
               </div>
             </div>
             <div class="faq-item">
               <button class="faq-question" onclick="App.toggleFaq(this)">
-                <span><i class="fas fa-question-circle"></i> Berapa maksimal slot yang bisa saya sewa sekaligus?</span>
+                <span><i class="fas fa-question-circle"></i> Berapa maksimal slot yang bisa disewa sekaligus?</span>
                 <i class="fas fa-chevron-down faq-icon"></i>
               </button>
               <div class="faq-answer">
-                <p>Setiap transaksi pemesanan dapat memilih maksimal <strong>4 slot parkir</strong> sekaligus. Jika Anda membutuhkan lebih dari 4 slot, silakan hubungi admin secara langsung melalui WhatsApp untuk pengaturan lebih lanjut.</p>
+                <p>Maksimal <strong>4 slot</strong> per transaksi. Untuk lebih, hubungi admin langsung.</p>
               </div>
             </div>
             <div class="faq-item">
               <button class="faq-question" onclick="App.toggleFaq(this)">
-                <span><i class="fas fa-question-circle"></i> Apakah data keuangan dapat dilihat oleh semua orang?</span>
+                <span><i class="fas fa-question-circle"></i> Apakah data keuangan dapat dilihat semua orang?</span>
                 <i class="fas fa-chevron-down faq-icon"></i>
               </button>
               <div class="faq-answer">
-                <p>Ya. Sebagai bentuk transparansi pengelolaan, laporan keuangan — termasuk total pemasukan, pengeluaran, saldo, dan progres pengembalian dana investor — dapat diakses oleh siapa saja melalui menu <strong>Keuangan</strong> tanpa perlu login.</p>
+                <p>Ya. Sebagai bentuk transparansi, laporan keuangan bisa diakses siapa saja melalui menu Keuangan tanpa login.</p>
               </div>
             </div>
           </div>
@@ -499,10 +461,8 @@
           <div style="text-align:center;margin-top:3rem;padding:2rem;background:var(--bg-secondary);border-radius:var(--radius-lg)">
             <i class="fas fa-headset" style="font-size:2rem;color:var(--primary);margin-bottom:0.75rem;display:block"></i>
             <h3 style="margin-bottom:0.5rem">Masih Ada Pertanyaan?</h3>
-            <p style="color:var(--text-secondary);margin-bottom:1rem">Hubungi admin kami langsung melalui WhatsApp untuk bantuan lebih lanjut.</p>
-            <button class="btn btn-primary" onclick="App.toggleWA()">
-              <i class="fab fa-whatsapp"></i> Chat dengan Admin
-            </button>
+            <p style="color:var(--text-secondary);margin-bottom:1rem">Hubungi admin kami langsung melalui WhatsApp.</p>
+            <button class="btn btn-primary" onclick="App.toggleWA()"><i class="fab fa-whatsapp"></i> Chat dengan Admin</button>
           </div>
         </div>
       </section>
@@ -527,19 +487,10 @@
             <p style="color:var(--text-secondary);margin-top:0.25rem">Kelola parkir, verifikasi pembayaran, dan atur sistem</p>
           </div>
           <div class="admin-tabs">
-            <button class="admin-tab active" onclick="Admin.switchTab('pending', this)">
-              <i class="fas fa-clock"></i> Pending
-              <span class="badge" id="pendingCount">0</span>
-            </button>
-            <button class="admin-tab" onclick="Admin.switchTab('users', this)">
-              <i class="fas fa-users"></i> Pengguna
-            </button>
-            <button class="admin-tab" onclick="Admin.switchTab('investor', this)">
-              <i class="fas fa-hand-holding-usd"></i> Investor
-            </button>
-            <button class="admin-tab" onclick="Admin.switchTab('settings', this)">
-              <i class="fas fa-cog"></i> Pengaturan
-            </button>
+            <button class="admin-tab active" onclick="Admin.switchTab('pending', this)"><i class="fas fa-clock"></i> Pending <span class="badge" id="pendingCount">0</span></button>
+            <button class="admin-tab" onclick="Admin.switchTab('users', this)"><i class="fas fa-users"></i> Pengguna</button>
+            <button class="admin-tab" onclick="Admin.switchTab('investor', this)"><i class="fas fa-hand-holding-usd"></i> Investor</button>
+            <button class="admin-tab" onclick="Admin.switchTab('settings', this)"><i class="fas fa-cog"></i> Pengaturan</button>
           </div>
           <div id="adminContent"></div>
         </div>
