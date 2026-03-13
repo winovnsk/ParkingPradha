@@ -755,51 +755,6 @@ main { padding-top: 64px; }
 .spot-card.available .spot-status { background: var(--success); color: #fff; }
 .spot-card.booked .spot-status { background: var(--danger); color: #fff; }
 
-
-/* ── FAQ ── */
-.faq-list {
-  display: grid;
-  gap: 0.9rem;
-  max-width: 920px;
-  margin: 0 auto;
-}
-
-.faq-item {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 0.9rem 1.1rem;
-  box-shadow: var(--shadow-sm);
-}
-
-.faq-item summary {
-  cursor: pointer;
-  font-weight: 700;
-  color: var(--text-primary);
-  list-style: none;
-  position: relative;
-  padding-right: 1.3rem;
-}
-
-.faq-item summary::-webkit-details-marker { display: none; }
-
-.faq-item summary::after {
-  content: '+';
-  position: absolute;
-  right: 0;
-  top: 0;
-  color: var(--primary);
-  font-weight: 800;
-}
-
-.faq-item[open] summary::after { content: '−'; }
-
-.faq-item p {
-  margin-top: 0.7rem;
-  color: var(--text-secondary);
-  line-height: 1.7;
-}
-
 /* ── REVIEWS ── */
 .reviews-carousel {
   overflow: hidden;
