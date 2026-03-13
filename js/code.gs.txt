@@ -1,8 +1,8 @@
 // ============================================================
 // ⚙️ KONFIGURASI UTAMA
 // ============================================================
-const SPREADSHEET_ID = '1gpLgAkN0Vf5LsohxHoA8Hcrug_oLNBvE7ObIJc5oofY';
-const DRIVE_FOLDER_ID = '13bXPdfhUCsycid_svPfg2IQ-hpgp67Do';
+const SPREADSHEET_ID = 'xxxxxxxx';
+const DRIVE_FOLDER_ID = 'xxxxxxxx';
 
 const SHEET = {
   USERS: 'USERS',
