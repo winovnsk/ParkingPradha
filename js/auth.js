@@ -14,11 +14,13 @@ const Auth = (() => {
   function setUser(user) {
     localStorage.setItem(SESSION_KEY, JSON.stringify(user));
     updateUI();
+    if (window.AutoLogout) AutoLogout.start();
   }
 
   function clearUser() {
     localStorage.removeItem(SESSION_KEY);
     updateUI();
+    if (window.AutoLogout) AutoLogout.stop();
   }
 
   function isLoggedIn() {
