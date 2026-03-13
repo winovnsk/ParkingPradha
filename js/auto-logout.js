@@ -1,10 +1,9 @@
 /**
  * Auto-Logout Module — Otomatis logout jika user idle
- * Timeout default: 30 menit
  */
 const AutoLogout = (() => {
-  const IDLE_TIMEOUT = 3 * 60 * 1000; // 30 menit
-  const WARNING_BEFORE = 60 * 1000;     // Warning 1 menit sebelum logout
+  const IDLE_TIMEOUT = 30 * 60 * 1000;
+  const WARNING_BEFORE = 60 * 1000;
   let idleTimer = null;
   let warningTimer = null;
   let warningEl = null;
@@ -16,8 +15,7 @@ const AutoLogout = (() => {
   }
 
   function _bindActivity() {
-    const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click'];
-    events.forEach(evt => {
+    ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click'].forEach(evt => {
       document.addEventListener(evt, _onActivity, { passive: true });
     });
   }
@@ -32,12 +30,10 @@ const AutoLogout = (() => {
     _clearTimers();
     if (!Auth.isLoggedIn()) return;
 
-    // Set warning timer
     warningTimer = setTimeout(() => {
       _showWarning();
     }, IDLE_TIMEOUT - WARNING_BEFORE);
 
-    // Set logout timer
     idleTimer = setTimeout(() => {
       _doAutoLogout();
     }, IDLE_TIMEOUT);
@@ -46,10 +42,6 @@ const AutoLogout = (() => {
   function stop() {
     _clearTimers();
     _clearWarning();
-    const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click'];
-    events.forEach(evt => {
-      document.removeEventListener(evt, _onActivity);
-    });
   }
 
   function _clearTimers() {
@@ -61,7 +53,7 @@ const AutoLogout = (() => {
     _clearWarning();
     warningEl = document.createElement('div');
     warningEl.className = 'idle-warning';
-    warningEl.innerHTML = `<i class="fas fa-clock"></i> Anda akan otomatis keluar dalam 1 menit karena tidak ada aktivitas.`;
+    warningEl.innerHTML = '<i class="fas fa-clock"></i> Anda akan otomatis keluar dalam 1 menit karena tidak ada aktivitas.';
     document.body.appendChild(warningEl);
   }
 
