@@ -4,10 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pradha Ciganitri Parking System</title>
-  <link rel="preconnect" href="[fonts.googleapis.com](https://fonts.googleapis.com)" />
-  <link rel="preconnect" href="[fonts.gstatic.com](https://fonts.gstatic.com)" crossorigin />
-  <link href="[fonts.googleapis.com](https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap)" rel="stylesheet" />
-  <link rel="stylesheet" href="[cdnjs.cloudflare.com](https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css)" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -24,7 +24,7 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <!-- ── NAVBAR ── -->
-  <nav class="navbar">
+  <nav class="navbar" id="navbar">
     <div class="container">
       <div class="navbar-inner">
         <a class="navbar-brand" href="#" onclick="App.navigate('home')">
@@ -161,7 +161,7 @@
           </div>
         </div>
         <div class="hero-wave">
-          <svg viewBox="0 0 1440 80" fill="none" xmlns="[w3.org](http://www.w3.org/2000/svg)" preserveAspectRatio="none">
+          <svg viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
             <path d="M0,40 C360,80 1080,0 1440,40 L1440,80 L0,80 Z" fill="white"/>
           </svg>
         </div>
@@ -219,8 +219,6 @@
             <p>Pilih area yang sesuai dengan kebutuhan dan anggaran Anda</p>
           </div>
           <div class="pricing-grid">
-
-            <!-- Premium -->
             <div class="pricing-card">
               <div class="pricing-badge">Popular</div>
               <div class="pricing-type"><i class="fas fa-crown"></i> Premium</div>
@@ -237,8 +235,6 @@
                 <i class="fas fa-car"></i> Sewa Area Premium
               </button>
             </div>
-
-            <!-- Regular -->
             <div class="pricing-card pricing-card-regular">
               <div class="pricing-type"><i class="fas fa-bolt" style="color:var(--success)"></i> Regular / SUTET</div>
               <div class="pricing-price">Rp50.000<span>/bulan</span></div>
@@ -255,8 +251,6 @@
               </button>
             </div>
           </div>
-
-          <!-- Discount Banner -->
           <div class="discount-banner" id="discountBanner"></div>
         </div>
       </section>
@@ -271,10 +265,10 @@
           </div>
           <div class="map-container">
             <iframe
-              src="[google.com](https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3960.5!2d107.63!3d-6.97!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNsKwNTgnMDAuMCJTIDEwN8KwMzcnNDguMCJF!5e0!3m2!1sid!2sid!4v1)"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3960.5!2d107.63!3d-6.97!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNsKwNTgnMDAuMCJTIDEwN8KwMzcnNDguMCJF!5e0!3m2!1sid!2sid!4v1"
               allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade">
             </iframe>
-            <a href="[maps.app.goo.gl](https://maps.app.goo.gl/)" target="_blank" class="btn btn-primary map-btn">
+            <a href="https://maps.app.goo.gl/" target="_blank" class="btn btn-primary map-btn">
               <i class="fas fa-map-marked-alt"></i> Buka di Google Maps
             </a>
           </div>
@@ -302,7 +296,7 @@
         </div>
       </section>
 
-    </div><!-- /page-home -->
+    </div>
 
     <!-- ── PAGE: AVAILABILITY ── -->
     <div class="page" id="page-availability">
@@ -313,19 +307,15 @@
             <h2>Status Slot Parkir</h2>
             <p>Data ketersediaan slot diperbarui secara langsung. Klik slot yang tersedia untuk melakukan pemesanan.</p>
           </div>
-
           <div class="availability-summary" id="availSummary">
             <div class="text-center" style="grid-column:1/-1;padding:2rem">
               <span class="spinner" style="width:24px;height:24px;display:inline-block;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .6s linear infinite"></span>
             </div>
           </div>
-
-          <!-- Info klik slot -->
           <div class="slot-info-banner">
             <i class="fas fa-info-circle"></i>
             <span>Klik slot berwarna <strong>hijau (Tersedia)</strong> untuk langsung melakukan pemesanan parkir.</span>
           </div>
-
           <div class="spots-filter">
             <button class="btn btn-sm btn-primary active" onclick="App.filterSpots('all', this)">
               <i class="fas fa-th"></i> Semua Slot
@@ -337,7 +327,6 @@
               <i class="fas fa-bolt"></i> Regular
             </button>
           </div>
-
           <div class="spots-grid" id="spotsGrid"></div>
         </div>
       </section>
@@ -386,7 +375,6 @@
             <p>Temukan jawaban atas pertanyaan umum seputar layanan parkir Pradha Ciganitri</p>
           </div>
           <div class="faq-list" id="faqList">
-
             <div class="faq-item">
               <button class="faq-question" onclick="App.toggleFaq(this)">
                 <span><i class="fas fa-question-circle"></i> Bagaimana cara menyewa lahan parkir?</span>
@@ -404,7 +392,6 @@
                 </ol>
               </div>
             </div>
-
             <div class="faq-item">
               <button class="faq-question" onclick="App.toggleFaq(this)">
                 <span><i class="fas fa-question-circle"></i> Apa perbedaan area Premium dan Regular?</span>
@@ -415,7 +402,6 @@
                 <p style="margin-top:0.5rem"><strong>Area Regular / SUTET (Rp50.000/bulan):</strong> Tersedia CCTV 24 jam, paving blok, dan patroli keamanan rutin. Tanpa kanopi dan pencahayaan LED.</p>
               </div>
             </div>
-
             <div class="faq-item">
               <button class="faq-question" onclick="App.toggleFaq(this)">
                 <span><i class="fas fa-question-circle"></i> Berapa lama proses verifikasi pembayaran?</span>
@@ -425,7 +411,6 @@
                 <p>Proses verifikasi dilakukan oleh admin dalam waktu <strong>1×24 jam kerja</strong> setelah bukti transfer diterima. Anda akan mendapatkan konfirmasi melalui sistem dan status sewa akan berubah menjadi Aktif.</p>
               </div>
             </div>
-
             <div class="faq-item">
               <button class="faq-question" onclick="App.toggleFaq(this)">
                 <span><i class="fas fa-question-circle"></i> Apakah ada diskon untuk sewa jangka panjang?</span>
@@ -441,7 +426,6 @@
                 <p style="margin-top:0.5rem">Besaran diskon dapat dilihat langsung pada tampilan nominal di langkah pemilihan durasi saat proses booking.</p>
               </div>
             </div>
-
             <div class="faq-item">
               <button class="faq-question" onclick="App.toggleFaq(this)">
                 <span><i class="fas fa-question-circle"></i> Bagaimana cara memperpanjang sewa?</span>
@@ -459,7 +443,6 @@
                 <p style="margin-top:0.5rem">Disarankan untuk memperpanjang setidaknya <strong>7 hari sebelum</strong> masa sewa berakhir.</p>
               </div>
             </div>
-
             <div class="faq-item">
               <button class="faq-question" onclick="App.toggleFaq(this)">
                 <span><i class="fas fa-question-circle"></i> Ke rekening mana saya harus transfer?</span>
@@ -469,7 +452,6 @@
                 <p>Nomor rekening tujuan transfer ditampilkan secara otomatis pada langkah <strong>"Ringkasan Tagihan"</strong> saat proses booking berlangsung. Tersedia pilihan bank BCA, BRI, dan DANA. Pastikan Anda mentransfer ke rekening yang benar dan menyimpan bukti transfer.</p>
               </div>
             </div>
-
             <div class="faq-item">
               <button class="faq-question" onclick="App.toggleFaq(this)">
                 <span><i class="fas fa-question-circle"></i> Apa yang terjadi jika pembayaran saya ditolak?</span>
@@ -485,7 +467,6 @@
                 <p style="margin-top:0.5rem">Hubungi admin melalui WhatsApp jika Anda membutuhkan bantuan lebih lanjut.</p>
               </div>
             </div>
-
             <div class="faq-item">
               <button class="faq-question" onclick="App.toggleFaq(this)">
                 <span><i class="fas fa-question-circle"></i> Bagaimana cara mereset password saya?</span>
@@ -495,7 +476,6 @@
                 <p>Jika lupa password, klik tautan <strong>"Lupa Password?"</strong> pada halaman masuk. Anda akan diarahkan untuk menghubungi admin melalui WhatsApp. Admin akan membantu mereset password Anda setelah memverifikasi identitas.</p>
               </div>
             </div>
-
             <div class="faq-item">
               <button class="faq-question" onclick="App.toggleFaq(this)">
                 <span><i class="fas fa-question-circle"></i> Berapa maksimal slot yang bisa saya sewa sekaligus?</span>
@@ -505,7 +485,6 @@
                 <p>Setiap transaksi pemesanan dapat memilih maksimal <strong>4 slot parkir</strong> sekaligus. Jika Anda membutuhkan lebih dari 4 slot, silakan hubungi admin secara langsung melalui WhatsApp untuk pengaturan lebih lanjut.</p>
               </div>
             </div>
-
             <div class="faq-item">
               <button class="faq-question" onclick="App.toggleFaq(this)">
                 <span><i class="fas fa-question-circle"></i> Apakah data keuangan dapat dilihat oleh semua orang?</span>
@@ -515,8 +494,7 @@
                 <p>Ya. Sebagai bentuk transparansi pengelolaan, laporan keuangan — termasuk total pemasukan, pengeluaran, saldo, dan progres pengembalian dana investor — dapat diakses oleh siapa saja melalui menu <strong>Keuangan</strong> tanpa perlu login.</p>
               </div>
             </div>
-
-          </div><!-- /faq-list -->
+          </div>
 
           <div style="text-align:center;margin-top:3rem;padding:2rem;background:var(--bg-secondary);border-radius:var(--radius-lg)">
             <i class="fas fa-headset" style="font-size:2rem;color:var(--primary);margin-bottom:0.75rem;display:block"></i>
@@ -528,7 +506,7 @@
           </div>
         </div>
       </section>
-    </div><!-- /page-faq -->
+    </div>
 
     <!-- ── PAGE: DASHBOARD ── -->
     <div class="page" id="page-dashboard">
@@ -605,8 +583,8 @@
   </footer>
 
   <!-- ── SCRIPTS ── -->
-  <script src="[cdnjs.cloudflare.com](https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js)"></script>
-  <script src="[cdnjs.cloudflare.com](https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js)"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
   <script src="utils.js"></script>
   <script src="api.js"></script>
   <script src="auth.js"></script>
