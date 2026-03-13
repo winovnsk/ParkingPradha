@@ -311,6 +311,10 @@ const Booking = (() => {
     try {
       const payload = {
         user_id: user.id,
+        uploader_name: user.nama || '',
+        uploader_role: user.role || 'User',
+        upload_timestamp: new Date().toISOString(),
+        upload_source: 'booking',
         spots: state.selectedSpots.map(s => ({
           spot_id: s.spot_id,
           plat_nomor: s.plat_nomor,

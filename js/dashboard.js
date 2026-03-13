@@ -203,9 +203,14 @@ const Dashboard = (() => {
       Utils.setLoading(btn, true);
 
       try {
+        const user = Auth.getUser() || {};
         const res = await API.extendBooking({
           trx_id: tId,
           bulan_tambah: selectedDuration,
+          uploader_name: user.nama || '',
+          uploader_role: user.role || 'User',
+          upload_timestamp: new Date().toISOString(),
+          upload_source: 'extend',
           bukti_transfer_base64: fileBase64,
           bukti_filename: fileName,
           bukti_mime_type: fileMimeType
