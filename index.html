@@ -3,401 +3,617 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Sistem Penyewaan Parkir Terintegrasi Komplek Pradha Ciganitri — Booking, Kelola, dan Pantau Lahan Parkir Anda Secara Digital." />
-  <meta name="theme-color" content="#0f172a" />
   <title>Pradha Ciganitri Parking System</title>
-
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
-
-  <!-- Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-
-  <!-- PDF Library -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-
-  <!-- App CSS -->
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="preconnect" href="[fonts.googleapis.com](https://fonts.googleapis.com)" />
+  <link rel="preconnect" href="[fonts.gstatic.com](https://fonts.gstatic.com)" crossorigin />
+  <link href="[fonts.googleapis.com](https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap)" rel="stylesheet" />
+  <link rel="stylesheet" href="[cdnjs.cloudflare.com](https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css)" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <!-- ============ LOADER ============ -->
-  <div id="app-loader" class="loader-overlay">
+  <!-- ── LOADER ── -->
+  <div class="loader-overlay" id="app-loader">
     <div class="loader-content">
       <div class="loader-spinner"></div>
       <p class="loader-text">Memuat Sistem Parkir...</p>
     </div>
   </div>
 
-  <!-- ============ NAVBAR ============ -->
-  <nav class="navbar" id="navbar">
-    <div class="container navbar-inner">
-      <a href="#" class="navbar-brand" onclick="App.navigate('home')">
-        <i class="fas fa-square-parking brand-icon"></i>
-        <span>Pradha<strong>Parking</strong></span>
-      </a>
-      <button class="navbar-toggle" id="navToggle" aria-label="Toggle menu">
-        <span></span><span></span><span></span>
-      </button>
-      <ul class="navbar-menu" id="navMenu">
-        <li><a href="#" onclick="App.navigate('home')" data-nav="home"><i class="fas fa-home"></i> Beranda</a></li>
-        <li><a href="#" onclick="App.navigate('availability')" data-nav="availability"><i class="fas fa-car"></i> Ketersediaan</a></li>
-        <li><a href="#" onclick="App.navigate('financial')" data-nav="financial"><i class="fas fa-chart-pie"></i> Keuangan</a></li>
-        <li><a href="#" onclick="App.navigate('reviews')" data-nav="reviews"><i class="fas fa-star"></i> Ulasan</a></li>
-        <li id="nav-login-btn"><a href="#" onclick="Auth.showLoginModal()" class="btn btn-primary btn-sm"><i class="fas fa-sign-in-alt"></i> Masuk</a></li>
-        <li id="nav-user-btn" class="hidden">
-          <div class="nav-user-dropdown">
-            <button class="btn btn-ghost btn-sm" onclick="App.toggleUserMenu()">
-              <i class="fas fa-user-circle"></i> <span id="nav-user-name">User</span> <i class="fas fa-chevron-down"></i>
-            </button>
+  <!-- ── TOAST ── -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- ── NAVBAR ── -->
+  <nav class="navbar">
+    <div class="container">
+      <div class="navbar-inner">
+        <a class="navbar-brand" href="#" onclick="App.navigate('home')">
+          <i class="fas fa-square-parking brand-icon"></i>
+          <span>Pradha<strong>Parking</strong></span>
+        </a>
+
+        <ul class="navbar-menu" id="navMenu">
+          <li><a href="#" data-nav="home" class="active" onclick="App.navigate('home')"><i class="fas fa-home"></i> Beranda</a></li>
+          <li><a href="#" data-nav="availability" onclick="App.navigate('availability')"><i class="fas fa-parking"></i> Ketersediaan</a></li>
+          <li><a href="#" data-nav="financial" onclick="App.navigate('financial')"><i class="fas fa-chart-bar"></i> Keuangan</a></li>
+          <li><a href="#" data-nav="reviews" onclick="App.navigate('reviews')"><i class="fas fa-star"></i> Ulasan</a></li>
+          <li><a href="#" data-nav="faq" onclick="App.navigate('faq')"><i class="fas fa-question-circle"></i> FAQ</a></li>
+
+          <!-- Tombol Login -->
+          <li id="nav-login-btn">
+            <a href="#" class="btn btn-primary btn-sm" onclick="Auth.showLoginModal()">
+              <i class="fas fa-sign-in-alt"></i> Masuk
+            </a>
+          </li>
+
+          <!-- User Dropdown -->
+          <li class="nav-user-dropdown hidden" id="nav-user-btn">
+            <a href="#" onclick="App.toggleUserMenu()" style="gap:0.5rem">
+              <div class="nav-avatar" id="nav-user-avatar">U</div>
+              <span id="nav-user-name">User</span>
+              <i class="fas fa-chevron-down" style="font-size:0.7rem"></i>
+            </a>
             <div class="dropdown-menu" id="userDropdown">
               <a href="#" onclick="App.navigate('dashboard')"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
               <a href="#" onclick="Auth.logout()"><i class="fas fa-sign-out-alt"></i> Keluar</a>
             </div>
-          </div>
-        </li>
-      </ul>
+          </li>
+        </ul>
+
+        <button class="navbar-toggle" id="navToggle" aria-label="Toggle menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
     </div>
   </nav>
 
-  <!-- ============ MAIN CONTENT ============ -->
-  <main id="main-content">
-
-    <!-- ===== HOME PAGE ===== -->
-    <section id="page-home" class="page active">
-
-      <!-- Hero -->
-      <div class="hero">
-        <div class="hero-bg"></div>
-        <div class="container hero-inner">
-          <div class="hero-content">
-            <div class="hero-badge"><i class="fas fa-shield-halved"></i> Aman &bull; Terjangkau &bull; Transparan</div>
-            <h1>Sewa Parkir <span class="gradient-text">Pradha Ciganitri</span></h1>
-            <p class="hero-subtitle">Platform digital penyewaan lahan parkir untuk warga RT 08 & RT 11 Komplek Pradha Ciganitri. Booking mudah, pembayaran praktis, pengelolaan transparan.</p>
-            <div class="hero-actions">
-              <button class="btn btn-primary btn-lg" onclick="Booking.start()">
-                <i class="fas fa-car-side"></i> Sewa Parkir Sekarang
-              </button>
-              <button class="btn btn-outline btn-lg" onclick="App.navigate('availability')">
-                <i class="fas fa-binoculars"></i> Lihat Ketersediaan
-              </button>
-            </div>
-            <div class="hero-stats" id="heroStats">
-              <div class="hero-stat">
-                <div class="hero-stat-number" id="statPremium">-</div>
-                <div class="hero-stat-label">Slot Premium</div>
-              </div>
-              <div class="hero-stat">
-                <div class="hero-stat-number" id="statRegular">-</div>
-                <div class="hero-stat-label">Slot Regular</div>
-              </div>
-              <div class="hero-stat">
-                <div class="hero-stat-number" id="statPrice">150K</div>
-                <div class="hero-stat-label">Mulai dari/bln</div>
-              </div>
-            </div>
-          </div>
-          <div class="hero-visual">
-            <div class="hero-card-stack">
-              <div class="floating-card fc-1">
-                <i class="fas fa-video"></i>
-                <span>CCTV 24 Jam</span>
-              </div>
-              <div class="floating-card fc-2">
-                <i class="fas fa-cloud-sun"></i>
-                <span>Kanopi Teduh</span>
-              </div>
-              <div class="floating-card fc-3">
-                <i class="fas fa-user-shield"></i>
-                <span>Security Patroli</span>
-              </div>
-              <div class="floating-card fc-4">
-                <i class="fas fa-lightbulb"></i>
-                <span>LED Terang</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="hero-wave">
-          <svg viewBox="0 0 1440 100" preserveAspectRatio="none">
-            <path d="M0,40 C360,100 1080,0 1440,60 L1440,100 L0,100 Z" fill="var(--bg-primary)"/>
-          </svg>
-        </div>
-      </div>
-
-      <!-- Features -->
-      <div class="section" id="features">
-        <div class="container">
-          <div class="section-header">
-            <span class="section-badge">Fasilitas</span>
-            <h2>Mengapa Memilih Kami?</h2>
-            <p>Lahan parkir dengan fasilitas terbaik dan harga terjangkau</p>
-          </div>
-          <div class="features-grid">
-            <div class="feature-card">
-              <div class="feature-icon" style="--accent: #3b82f6"><i class="fas fa-video"></i></div>
-              <h3>CCTV 24 Jam</h3>
-              <p>Pengawasan kamera CCTV aktif sepanjang hari untuk keamanan kendaraan Anda.</p>
-            </div>
-            <div class="feature-card">
-              <div class="feature-icon" style="--accent: #10b981"><i class="fas fa-umbrella"></i></div>
-              <h3>Kanopi Teduh</h3>
-              <p>Area Premium dilengkapi kanopi yang melindungi kendaraan dari terik & hujan.</p>
-            </div>
-            <div class="feature-card">
-              <div class="feature-icon" style="--accent: #f59e0b"><i class="fas fa-lightbulb"></i></div>
-              <h3>LED Terang</h3>
-              <p>Pencahayaan LED yang terang di malam hari untuk kenyamanan dan keamanan.</p>
-            </div>
-            <div class="feature-card">
-              <div class="feature-icon" style="--accent: #ef4444"><i class="fas fa-user-shield"></i></div>
-              <h3>Security Patroli</h3>
-              <p>Petugas keamanan melakukan patroli rutin setiap 3 jam sekali.</p>
-            </div>
-            <div class="feature-card">
-              <div class="feature-icon" style="--accent: #8b5cf6"><i class="fas fa-road"></i></div>
-              <h3>Paving Blok</h3>
-              <p>Seluruh area parkir menggunakan paving blok yang rapi dan kokoh.</p>
-            </div>
-            <div class="feature-card">
-              <div class="feature-icon" style="--accent: #06b6d4"><i class="fas fa-mobile-alt"></i></div>
-              <h3>Digital Booking</h3>
-              <p>Booking dan pembayaran praktis melalui platform digital kami.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Pricing -->
-      <div class="section section-alt" id="pricing">
-        <div class="container">
-          <div class="section-header">
-            <span class="section-badge">Harga</span>
-            <h2>Pilihan Paket Parkir</h2>
-            <p>Pilih area yang sesuai dengan kebutuhan Anda</p>
-          </div>
-          <div class="pricing-grid">
-            <div class="pricing-card">
-              <div class="pricing-badge">Popular</div>
-              <div class="pricing-type"><i class="fas fa-crown"></i> Premium</div>
-              <div class="pricing-price">Rp150.000<span>/bulan</span></div>
-              <div class="pricing-subtitle">14 Unit Tersedia</div>
-              <ul class="pricing-features">
-                <li><i class="fas fa-check"></i> Kanopi Teduh</li>
-                <li><i class="fas fa-check"></i> LED Terang</li>
-                <li><i class="fas fa-check"></i> CCTV 24 Jam</li>
-                <li><i class="fas fa-check"></i> Paving Blok</li>
-                <li><i class="fas fa-check"></i> Security Patroli 3 Jam</li>
-              </ul>
-              <button class="btn btn-primary btn-block" onclick="Booking.start('Premium')">
-                Pilih Premium
-              </button>
-            </div>
-            <div class="pricing-card pricing-card-regular">
-              <div class="pricing-type"><i class="fas fa-bolt"></i> Regular / SUTET</div>
-              <div class="pricing-price">Rp50.000<span>/bulan</span></div>
-              <div class="pricing-subtitle">10 Unit Tersedia</div>
-              <ul class="pricing-features">
-                <li><i class="fas fa-check"></i> CCTV 24 Jam</li>
-                <li><i class="fas fa-check"></i> Paving Blok</li>
-                <li><i class="fas fa-check"></i> Security Patroli 3 Jam</li>
-                <li class="disabled"><i class="fas fa-times"></i> Kanopi Teduh</li>
-                <li class="disabled"><i class="fas fa-times"></i> LED Terang</li>
-              </ul>
-              <button class="btn btn-outline btn-block" onclick="Booking.start('Regular')">
-                Pilih Regular
-              </button>
-            </div>
-          </div>
-          <div class="discount-banner" id="discountBanner"></div>
-        </div>
-      </div>
-
-      <!-- Map Section -->
-      <div class="section" id="location">
-        <div class="container">
-          <div class="section-header">
-            <span class="section-badge">Lokasi</span>
-            <h2>Temukan Kami</h2>
-            <p>Komplek Pradha Ciganitri, Bandung</p>
-          </div>
-          <div class="map-container">
-            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3960.6!2d107.65!3d-6.97!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNsKwNTgnMTIuMCJTIDEwN8KwMzknMDAuMCJF!5e0!3m2!1sid!2sid!4v1700000000000!5m2!1sid!2sid" 
-              loading="lazy" allowfullscreen referrerpolicy="no-referrer-when-downgrade"></iframe>
-            <a href="https://maps.app.goo.gl/c7HsUTgwiWrfpNJ3A" target="_blank" class="btn btn-primary map-btn">
-              <i class="fas fa-map-marker-alt"></i> Buka di Google Maps
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <!-- Reviews Preview -->
-      <div class="section section-alt" id="reviews-preview">
-        <div class="container">
-          <div class="section-header">
-            <span class="section-badge">Testimoni</span>
-            <h2>Kata Mereka</h2>
-            <p>Ulasan dari warga yang sudah merasakan layanan kami</p>
-          </div>
-          <div class="reviews-carousel" id="reviewsCarousel">
-            <div class="reviews-track" id="reviewsTrack"></div>
-          </div>
-          <div class="text-center mt-2">
-            <button class="btn btn-outline" onclick="App.navigate('reviews')">
-              <i class="fas fa-comments"></i> Lihat Semua Ulasan
-            </button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ===== AVAILABILITY PAGE ===== -->
-    <section id="page-availability" class="page">
-      <div class="section">
-        <div class="container">
-          <div class="section-header">
-            <span class="section-badge">Real-time</span>
-            <h2>Ketersediaan Parkir</h2>
-            <p>Data slot parkir diperbarui secara langsung</p>
-          </div>
-          <div class="availability-summary" id="availSummary"></div>
-          <div class="spots-filter">
-            <button class="btn btn-sm btn-primary active" onclick="App.filterSpots('all', this)">Semua</button>
-            <button class="btn btn-sm btn-ghost" onclick="App.filterSpots('Premium', this)">Premium</button>
-            <button class="btn btn-sm btn-ghost" onclick="App.filterSpots('Regular', this)">Regular</button>
-          </div>
-          <div class="spots-grid" id="spotsGrid"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ===== FINANCIAL PAGE ===== -->
-    <section id="page-financial" class="page">
-      <div class="section">
-        <div class="container">
-          <div class="section-header">
-            <span class="section-badge">Transparansi</span>
-            <h2>Laporan Keuangan</h2>
-            <p>Portal transparansi pemasukan dan pengembalian dana investor</p>
-          </div>
-          <div id="financialContent"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ===== REVIEWS PAGE ===== -->
-    <section id="page-reviews" class="page">
-      <div class="section">
-        <div class="container">
-          <div class="section-header">
-            <span class="section-badge">Testimoni</span>
-            <h2>Ulasan Warga</h2>
-            <p>Pengalaman dari penyewa parkir Pradha Ciganitri</p>
-          </div>
-          <div class="reviews-actions">
-            <button class="btn btn-primary" onclick="App.showReviewForm()"><i class="fas fa-pen"></i> Tulis Ulasan</button>
-          </div>
-          <div class="reviews-list" id="reviewsList"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ===== USER DASHBOARD ===== -->
-    <section id="page-dashboard" class="page">
-      <div class="section">
-        <div class="container">
-          <div class="dashboard-header" id="dashHeader"></div>
-          <div class="dashboard-grid" id="dashContent"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ===== ADMIN DASHBOARD ===== -->
-    <section id="page-admin" class="page">
-      <div class="section">
-        <div class="container">
-          <div class="admin-header">
-            <h2><i class="fas fa-shield-halved"></i> Panel Admin</h2>
-            <p>Kelola parkir, verifikasi pembayaran, dan atur sistem</p>
-          </div>
-          <div class="admin-tabs" id="adminTabs">
-            <button class="admin-tab active" onclick="Admin.switchTab('pending', this)"><i class="fas fa-clock"></i> Pending <span class="badge" id="pendingCount">0</span></button>
-            <button class="admin-tab" onclick="Admin.switchTab('users', this)"><i class="fas fa-users"></i> Users</button>
-            <button class="admin-tab" onclick="Admin.switchTab('investor', this)"><i class="fas fa-hand-holding-usd"></i> Investor</button>
-            <button class="admin-tab" onclick="Admin.switchTab('settings', this)"><i class="fas fa-cog"></i> Pengaturan</button>
-          </div>
-          <div class="admin-content" id="adminContent"></div>
-        </div>
-      </div>
-    </section>
-
-  </main>
-
-  <!-- ============ FOOTER ============ -->
-  <footer class="footer">
-    <div class="container">
-      <div class="footer-grid">
-        <div class="footer-brand">
-          <h3><i class="fas fa-square-parking"></i> Pradha<strong>Parking</strong></h3>
-          <p>Platform penyewaan parkir terintegrasi untuk warga RT 08 & RT 11 Komplek Pradha Ciganitri.</p>
-        </div>
-        <div class="footer-links">
-          <h4>Menu</h4>
-          <a href="#" onclick="App.navigate('home')">Beranda</a>
-          <a href="#" onclick="App.navigate('availability')">Ketersediaan</a>
-          <a href="#" onclick="App.navigate('financial')">Keuangan</a>
-          <a href="#" onclick="App.navigate('reviews')">Ulasan</a>
-        </div>
-        <div class="footer-links">
-          <h4>Kontak Admin</h4>
-          <div id="footerContacts">
-            <p><i class="fas fa-spinner fa-spin"></i> Memuat...</p>
-          </div>
-        </div>
-      </div>
-      <div class="footer-bottom">
-        <p>&copy; 2026 Pradha Ciganitri Parking System. All rights reserved.</p>
-      </div>
-    </div>
-  </footer>
-
-  <!-- ============ MODAL CONTAINER ============ -->
+  <!-- ── MODAL ── -->
   <div class="modal-overlay" id="modalOverlay" onclick="App.closeModal(event)">
-    <div class="modal" id="modalContainer" onclick="event.stopPropagation()">
+    <div class="modal" onclick="event.stopPropagation()">
       <button class="modal-close" onclick="App.closeModal()"><i class="fas fa-times"></i></button>
       <div class="modal-body" id="modalBody"></div>
     </div>
   </div>
 
-  <!-- ============ TOAST CONTAINER ============ -->
-  <div class="toast-container" id="toastContainer"></div>
-
-  <!-- ============ WA FLOATING BUTTON ============ -->
-  <div class="wa-float" id="waFloat">
+  <!-- ── WHATSAPP FLOAT ── -->
+  <div class="wa-float">
+    <button class="wa-btn" onclick="App.toggleWA()" aria-label="Hubungi Admin via WhatsApp">
+      <div class="wa-pulse"></div>
+      <i class="fab fa-whatsapp"></i>
+    </button>
     <div class="wa-popup" id="waPopup">
       <div class="wa-popup-header">
         <h4><i class="fab fa-whatsapp"></i> Hubungi Admin</h4>
-        <button onclick="App.toggleWA()" class="wa-popup-close"><i class="fas fa-times"></i></button>
+        <button class="wa-popup-close" onclick="App.toggleWA()"><i class="fas fa-times"></i></button>
       </div>
-      <div class="wa-popup-body" id="waContacts"></div>
+      <div class="wa-popup-body" id="waContacts">
+        <p style="padding:1rem;font-size:0.85rem;color:var(--text-secondary)">Memuat kontak...</p>
+      </div>
     </div>
-    <button class="wa-btn" onclick="App.toggleWA()" aria-label="WhatsApp">
-      <i class="fab fa-whatsapp"></i>
-      <span class="wa-pulse"></span>
-    </button>
   </div>
 
-  <!-- ============ SCRIPTS ============ -->
-  <script src="js/api.js"></script>
-  <script src="js/utils.js"></script>
-  <script src="js/auth.js"></script>
-  <script src="js/booking.js"></script>
-  <script src="js/dashboard.js"></script>
-  <script src="js/admin.js"></script>
-  <script src="js/financial.js"></script>
-  <script src="js/app.js"></script>
+  <!-- ══════════════════════════════════════════
+       MAIN CONTENT
+  ══════════════════════════════════════════ -->
+  <main>
+
+    <!-- ── PAGE: HOME ── -->
+    <div class="page active" id="page-home">
+
+      <!-- HERO -->
+      <section class="hero">
+        <div class="hero-bg"></div>
+        <div class="container">
+          <div class="hero-inner">
+            <div class="hero-content">
+              <div class="hero-badge">
+                <i class="fas fa-shield-alt"></i> Aman &bull; Terjangkau &bull; Transparan
+              </div>
+              <h1>Sewa Parkir <span class="gradient-text">Pradha Ciganitri</span></h1>
+              <p class="hero-subtitle">
+                Platform digital penyewaan lahan parkir untuk warga RT 08 &amp; RT 11 Komplek Pradha Ciganitri.
+                Booking mudah, pembayaran praktis, pengelolaan transparan.
+              </p>
+              <div class="hero-actions">
+                <button class="btn btn-primary btn-lg" onclick="Booking.start()">
+                  <i class="fas fa-car"></i> Sewa Sekarang
+                </button>
+                <button class="btn btn-outline btn-lg" style="color:#fff;border-color:rgba(255,255,255,0.4)" onclick="App.navigate('availability')">
+                  <i class="fas fa-search"></i> Cek Ketersediaan
+                </button>
+              </div>
+              <div class="hero-stats">
+                <div>
+                  <div class="hero-stat-number" id="statPremium">-</div>
+                  <div class="hero-stat-label">Slot Premium</div>
+                </div>
+                <div>
+                  <div class="hero-stat-number" id="statRegular">-</div>
+                  <div class="hero-stat-label">Slot Regular</div>
+                </div>
+                <div>
+                  <div class="hero-stat-number">dari <span id="statPrice">50K</span></div>
+                  <div class="hero-stat-label">per bulan</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="hero-visual">
+              <div class="hero-card-stack">
+                <div class="floating-card fc-1">
+                  <i class="fas fa-video"></i>
+                  <div><div style="font-size:0.8rem;opacity:.7">Keamanan</div>CCTV 24 Jam</div>
+                </div>
+                <div class="floating-card fc-2">
+                  <i class="fas fa-umbrella"></i>
+                  <div><div style="font-size:0.8rem;opacity:.7">Fasilitas</div>Kanopi Teduh</div>
+                </div>
+                <div class="floating-card fc-3">
+                  <i class="fas fa-shield-alt"></i>
+                  <div><div style="font-size:0.8rem;opacity:.7">Penjagaan</div>Security Patroli</div>
+                </div>
+                <div class="floating-card fc-4">
+                  <i class="fas fa-lightbulb"></i>
+                  <div><div style="font-size:0.8rem;opacity:.7">Kenyamanan</div>LED Terang</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="hero-wave">
+          <svg viewBox="0 0 1440 80" fill="none" xmlns="[w3.org](http://www.w3.org/2000/svg)" preserveAspectRatio="none">
+            <path d="M0,40 C360,80 1080,0 1440,40 L1440,80 L0,80 Z" fill="white"/>
+          </svg>
+        </div>
+      </section>
+
+      <!-- FITUR -->
+      <section class="section">
+        <div class="container">
+          <div class="section-header">
+            <span class="section-badge">Mengapa Memilih Kami?</span>
+            <h2>Fasilitas Terbaik, Harga Terjangkau</h2>
+            <p>Lahan parkir dengan fasilitas lengkap dan pengelolaan yang transparan untuk warga komplek</p>
+          </div>
+          <div class="features-grid">
+            <div class="feature-card">
+              <div class="feature-icon"><i class="fas fa-video"></i></div>
+              <h3>CCTV 24 Jam</h3>
+              <p>Kamera CCTV aktif memantau seluruh area parkir sepanjang waktu, memberikan ketenangan pikiran bagi pemilik kendaraan.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon" style="background:rgba(245,158,11,0.12);color:var(--warning)"><i class="fas fa-umbrella"></i></div>
+              <h3>Kanopi Teduh</h3>
+              <p>Area Premium dilengkapi kanopi berkualitas yang melindungi kendaraan Anda dari terik matahari dan hujan sepanjang hari.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon" style="background:rgba(16,185,129,0.12);color:var(--success)"><i class="fas fa-lightbulb"></i></div>
+              <h3>Pencahayaan LED</h3>
+              <p>Lampu LED terang dipasang di seluruh area parkir untuk memastikan kenyamanan dan keamanan di malam hari.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon" style="background:rgba(239,68,68,0.12);color:var(--danger)"><i class="fas fa-user-shield"></i></div>
+              <h3>Security Patroli</h3>
+              <p>Petugas keamanan terlatih melakukan patroli rutin setiap 3 jam sekali untuk memastikan kendaraan Anda aman.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon" style="background:rgba(99,102,241,0.12);color:var(--info)"><i class="fas fa-road"></i></div>
+              <h3>Paving Blok</h3>
+              <p>Seluruh area parkir menggunakan paving blok berkualitas yang rapi, kokoh, dan tahan lama untuk semua jenis cuaca.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon" style="background:rgba(6,182,212,0.12);color:var(--accent)"><i class="fas fa-mobile-alt"></i></div>
+              <h3>Booking Digital</h3>
+              <p>Proses pemesanan dan pembayaran dilakukan secara digital — cepat, mudah, dan bisa dilakukan kapan saja dari mana saja.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PAKET HARGA -->
+      <section class="section section-alt">
+        <div class="container">
+          <div class="section-header">
+            <span class="section-badge">Pilihan Paket</span>
+            <h2>Pilihan Paket Parkir</h2>
+            <p>Pilih area yang sesuai dengan kebutuhan dan anggaran Anda</p>
+          </div>
+          <div class="pricing-grid">
+
+            <!-- Premium -->
+            <div class="pricing-card">
+              <div class="pricing-badge">Popular</div>
+              <div class="pricing-type"><i class="fas fa-crown"></i> Premium</div>
+              <div class="pricing-price">Rp150.000<span>/bulan</span></div>
+              <p class="pricing-subtitle">14 Unit Tersedia</p>
+              <ul class="pricing-features">
+                <li><i class="fas fa-check-circle"></i> Kanopi Teduh — Terlindung dari hujan &amp; panas</li>
+                <li><i class="fas fa-check-circle"></i> Pencahayaan LED — Terang sepanjang malam</li>
+                <li><i class="fas fa-check-circle"></i> CCTV 24 Jam — Pemantauan nonstop</li>
+                <li><i class="fas fa-check-circle"></i> Paving Blok — Permukaan rapi &amp; kokoh</li>
+                <li><i class="fas fa-check-circle"></i> Security Patroli tiap 3 Jam</li>
+              </ul>
+              <button class="btn btn-primary btn-block" onclick="Booking.start('Premium')">
+                <i class="fas fa-car"></i> Sewa Area Premium
+              </button>
+            </div>
+
+            <!-- Regular -->
+            <div class="pricing-card pricing-card-regular">
+              <div class="pricing-type"><i class="fas fa-bolt" style="color:var(--success)"></i> Regular / SUTET</div>
+              <div class="pricing-price">Rp50.000<span>/bulan</span></div>
+              <p class="pricing-subtitle">10 Unit Tersedia</p>
+              <ul class="pricing-features">
+                <li><i class="fas fa-check-circle"></i> CCTV 24 Jam — Pemantauan nonstop</li>
+                <li><i class="fas fa-check-circle"></i> Paving Blok — Permukaan rapi &amp; kokoh</li>
+                <li><i class="fas fa-check-circle"></i> Security Patroli tiap 3 Jam</li>
+                <li class="disabled"><i class="fas fa-times-circle"></i> Kanopi Teduh (tidak tersedia)</li>
+                <li class="disabled"><i class="fas fa-times-circle"></i> Pencahayaan LED (tidak tersedia)</li>
+              </ul>
+              <button class="btn btn-outline btn-block" onclick="Booking.start('Regular')">
+                <i class="fas fa-car"></i> Sewa Area Regular
+              </button>
+            </div>
+          </div>
+
+          <!-- Discount Banner -->
+          <div class="discount-banner" id="discountBanner"></div>
+        </div>
+      </section>
+
+      <!-- LOKASI -->
+      <section class="section">
+        <div class="container">
+          <div class="section-header">
+            <span class="section-badge">Temukan Kami</span>
+            <h2>Lokasi Parkir</h2>
+            <p>Komplek Pradha Ciganitri, Bandung — Mudah diakses oleh seluruh warga RT 08 &amp; RT 11</p>
+          </div>
+          <div class="map-container">
+            <iframe
+              src="[google.com](https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3960.5!2d107.63!3d-6.97!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNsKwNTgnMDAuMCJTIDEwN8KwMzcnNDguMCJF!5e0!3m2!1sid!2sid!4v1)"
+              allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade">
+            </iframe>
+            <a href="[maps.app.goo.gl](https://maps.app.goo.gl/)" target="_blank" class="btn btn-primary map-btn">
+              <i class="fas fa-map-marked-alt"></i> Buka di Google Maps
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ULASAN PREVIEW -->
+      <section class="section section-alt">
+        <div class="container">
+          <div class="section-header">
+            <span class="section-badge">Kata Mereka</span>
+            <h2>Ulasan Warga</h2>
+            <p>Pengalaman nyata dari warga yang sudah menggunakan layanan parkir Pradha Ciganitri</p>
+          </div>
+          <div class="reviews-carousel">
+            <div class="reviews-track" id="reviewsTrack">
+              <div style="padding:2rem;color:var(--text-tertiary)">Memuat ulasan...</div>
+            </div>
+          </div>
+          <div style="text-align:center;margin-top:2rem">
+            <button class="btn btn-outline" onclick="App.navigate('reviews')">
+              <i class="fas fa-comments"></i> Lihat Semua Ulasan
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </div><!-- /page-home -->
+
+    <!-- ── PAGE: AVAILABILITY ── -->
+    <div class="page" id="page-availability">
+      <section class="section">
+        <div class="container">
+          <div class="section-header">
+            <span class="section-badge">Ketersediaan Parkir</span>
+            <h2>Status Slot Parkir</h2>
+            <p>Data ketersediaan slot diperbarui secara langsung. Klik slot yang tersedia untuk melakukan pemesanan.</p>
+          </div>
+
+          <div class="availability-summary" id="availSummary">
+            <div class="text-center" style="grid-column:1/-1;padding:2rem">
+              <span class="spinner" style="width:24px;height:24px;display:inline-block;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .6s linear infinite"></span>
+            </div>
+          </div>
+
+          <!-- Info klik slot -->
+          <div class="slot-info-banner">
+            <i class="fas fa-info-circle"></i>
+            <span>Klik slot berwarna <strong>hijau (Tersedia)</strong> untuk langsung melakukan pemesanan parkir.</span>
+          </div>
+
+          <div class="spots-filter">
+            <button class="btn btn-sm btn-primary active" onclick="App.filterSpots('all', this)">
+              <i class="fas fa-th"></i> Semua Slot
+            </button>
+            <button class="btn btn-sm btn-ghost" onclick="App.filterSpots('Premium', this)">
+              <i class="fas fa-crown"></i> Premium
+            </button>
+            <button class="btn btn-sm btn-ghost" onclick="App.filterSpots('Regular', this)">
+              <i class="fas fa-bolt"></i> Regular
+            </button>
+          </div>
+
+          <div class="spots-grid" id="spotsGrid"></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ── PAGE: FINANCIAL ── -->
+    <div class="page" id="page-financial">
+      <section class="section">
+        <div class="container">
+          <div class="section-header">
+            <span class="section-badge">Laporan Keuangan</span>
+            <h2>Transparansi Keuangan</h2>
+            <p>Portal transparansi pemasukan sewa parkir dan pengembalian dana investor secara terbuka</p>
+          </div>
+          <div id="financialContent"></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ── PAGE: REVIEWS ── -->
+    <div class="page" id="page-reviews">
+      <section class="section">
+        <div class="container">
+          <div class="section-header">
+            <span class="section-badge">Ulasan Warga</span>
+            <h2>Semua Ulasan</h2>
+            <p>Pengalaman dari para penyewa parkir Pradha Ciganitri</p>
+          </div>
+          <div class="reviews-actions" style="text-align:center;margin-bottom:2rem">
+            <button class="btn btn-primary" onclick="App.showReviewForm()">
+              <i class="fas fa-pen"></i> Tulis Ulasan Anda
+            </button>
+          </div>
+          <div class="reviews-list" id="reviewsList"></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ── PAGE: FAQ ── -->
+    <div class="page" id="page-faq">
+      <section class="section">
+        <div class="container">
+          <div class="section-header">
+            <span class="section-badge">Tanya Jawab</span>
+            <h2>Pertanyaan yang Sering Ditanyakan</h2>
+            <p>Temukan jawaban atas pertanyaan umum seputar layanan parkir Pradha Ciganitri</p>
+          </div>
+          <div class="faq-list" id="faqList">
+
+            <div class="faq-item">
+              <button class="faq-question" onclick="App.toggleFaq(this)">
+                <span><i class="fas fa-question-circle"></i> Bagaimana cara menyewa lahan parkir?</span>
+                <i class="fas fa-chevron-down faq-icon"></i>
+              </button>
+              <div class="faq-answer">
+                <p>Cara menyewa lahan parkir sangat mudah:</p>
+                <ol>
+                  <li>Daftar akun atau masuk jika sudah memiliki akun.</li>
+                  <li>Klik tombol <strong>"Sewa Sekarang"</strong> di beranda atau halaman Ketersediaan.</li>
+                  <li>Pilih jenis area (Premium atau Regular) dan slot yang tersedia.</li>
+                  <li>Tentukan durasi sewa (1, 3, 6, atau 12 bulan).</li>
+                  <li>Transfer pembayaran ke rekening yang tertera dan upload bukti transfer.</li>
+                  <li>Admin akan memverifikasi pembayaran dalam 1×24 jam kerja.</li>
+                </ol>
+              </div>
+            </div>
+
+            <div class="faq-item">
+              <button class="faq-question" onclick="App.toggleFaq(this)">
+                <span><i class="fas fa-question-circle"></i> Apa perbedaan area Premium dan Regular?</span>
+                <i class="fas fa-chevron-down faq-icon"></i>
+              </button>
+              <div class="faq-answer">
+                <p><strong>Area Premium (Rp150.000/bulan):</strong> Dilengkapi kanopi pelindung dari hujan dan panas, pencahayaan LED terang, CCTV 24 jam, paving blok, dan patroli keamanan rutin.</p>
+                <p style="margin-top:0.5rem"><strong>Area Regular / SUTET (Rp50.000/bulan):</strong> Tersedia CCTV 24 jam, paving blok, dan patroli keamanan rutin. Tanpa kanopi dan pencahayaan LED.</p>
+              </div>
+            </div>
+
+            <div class="faq-item">
+              <button class="faq-question" onclick="App.toggleFaq(this)">
+                <span><i class="fas fa-question-circle"></i> Berapa lama proses verifikasi pembayaran?</span>
+                <i class="fas fa-chevron-down faq-icon"></i>
+              </button>
+              <div class="faq-answer">
+                <p>Proses verifikasi dilakukan oleh admin dalam waktu <strong>1×24 jam kerja</strong> setelah bukti transfer diterima. Anda akan mendapatkan konfirmasi melalui sistem dan status sewa akan berubah menjadi Aktif.</p>
+              </div>
+            </div>
+
+            <div class="faq-item">
+              <button class="faq-question" onclick="App.toggleFaq(this)">
+                <span><i class="fas fa-question-circle"></i> Apakah ada diskon untuk sewa jangka panjang?</span>
+                <i class="fas fa-chevron-down faq-icon"></i>
+              </button>
+              <div class="faq-answer">
+                <p>Ya! Kami memberikan diskon menarik untuk sewa jangka panjang:</p>
+                <ul>
+                  <li>Sewa <strong>3 bulan</strong> — mendapatkan potongan harga</li>
+                  <li>Sewa <strong>6 bulan</strong> — potongan lebih besar</li>
+                  <li>Sewa <strong>12 bulan</strong> — diskon terbesar</li>
+                </ul>
+                <p style="margin-top:0.5rem">Besaran diskon dapat dilihat langsung pada tampilan nominal di langkah pemilihan durasi saat proses booking.</p>
+              </div>
+            </div>
+
+            <div class="faq-item">
+              <button class="faq-question" onclick="App.toggleFaq(this)">
+                <span><i class="fas fa-question-circle"></i> Bagaimana cara memperpanjang sewa?</span>
+                <i class="fas fa-chevron-down faq-icon"></i>
+              </button>
+              <div class="faq-answer">
+                <p>Perpanjangan sewa dapat dilakukan melalui <strong>Dashboard</strong> akun Anda:</p>
+                <ol>
+                  <li>Masuk ke akun dan buka halaman Dashboard.</li>
+                  <li>Pada kartu sewa aktif, klik tombol <strong>"Perpanjang Sewa"</strong>.</li>
+                  <li>Pilih durasi perpanjangan yang diinginkan.</li>
+                  <li>Upload bukti transfer pembayaran.</li>
+                  <li>Tunggu konfirmasi dari admin.</li>
+                </ol>
+                <p style="margin-top:0.5rem">Disarankan untuk memperpanjang setidaknya <strong>7 hari sebelum</strong> masa sewa berakhir.</p>
+              </div>
+            </div>
+
+            <div class="faq-item">
+              <button class="faq-question" onclick="App.toggleFaq(this)">
+                <span><i class="fas fa-question-circle"></i> Ke rekening mana saya harus transfer?</span>
+                <i class="fas fa-chevron-down faq-icon"></i>
+              </button>
+              <div class="faq-answer">
+                <p>Nomor rekening tujuan transfer ditampilkan secara otomatis pada langkah <strong>"Ringkasan Tagihan"</strong> saat proses booking berlangsung. Tersedia pilihan bank BCA, BRI, dan DANA. Pastikan Anda mentransfer ke rekening yang benar dan menyimpan bukti transfer.</p>
+              </div>
+            </div>
+
+            <div class="faq-item">
+              <button class="faq-question" onclick="App.toggleFaq(this)">
+                <span><i class="fas fa-question-circle"></i> Apa yang terjadi jika pembayaran saya ditolak?</span>
+                <i class="fas fa-chevron-down faq-icon"></i>
+              </button>
+              <div class="faq-answer">
+                <p>Jika pembayaran ditolak, slot yang sudah Anda pilih akan dikembalikan ke status tersedia dan Anda dapat melakukan booking ulang. Penolakan biasanya terjadi karena:</p>
+                <ul>
+                  <li>Bukti transfer tidak jelas atau tidak valid</li>
+                  <li>Nominal transfer tidak sesuai</li>
+                  <li>Rekening tujuan tidak sesuai</li>
+                </ul>
+                <p style="margin-top:0.5rem">Hubungi admin melalui WhatsApp jika Anda membutuhkan bantuan lebih lanjut.</p>
+              </div>
+            </div>
+
+            <div class="faq-item">
+              <button class="faq-question" onclick="App.toggleFaq(this)">
+                <span><i class="fas fa-question-circle"></i> Bagaimana cara mereset password saya?</span>
+                <i class="fas fa-chevron-down faq-icon"></i>
+              </button>
+              <div class="faq-answer">
+                <p>Jika lupa password, klik tautan <strong>"Lupa Password?"</strong> pada halaman masuk. Anda akan diarahkan untuk menghubungi admin melalui WhatsApp. Admin akan membantu mereset password Anda setelah memverifikasi identitas.</p>
+              </div>
+            </div>
+
+            <div class="faq-item">
+              <button class="faq-question" onclick="App.toggleFaq(this)">
+                <span><i class="fas fa-question-circle"></i> Berapa maksimal slot yang bisa saya sewa sekaligus?</span>
+                <i class="fas fa-chevron-down faq-icon"></i>
+              </button>
+              <div class="faq-answer">
+                <p>Setiap transaksi pemesanan dapat memilih maksimal <strong>4 slot parkir</strong> sekaligus. Jika Anda membutuhkan lebih dari 4 slot, silakan hubungi admin secara langsung melalui WhatsApp untuk pengaturan lebih lanjut.</p>
+              </div>
+            </div>
+
+            <div class="faq-item">
+              <button class="faq-question" onclick="App.toggleFaq(this)">
+                <span><i class="fas fa-question-circle"></i> Apakah data keuangan dapat dilihat oleh semua orang?</span>
+                <i class="fas fa-chevron-down faq-icon"></i>
+              </button>
+              <div class="faq-answer">
+                <p>Ya. Sebagai bentuk transparansi pengelolaan, laporan keuangan — termasuk total pemasukan, pengeluaran, saldo, dan progres pengembalian dana investor — dapat diakses oleh siapa saja melalui menu <strong>Keuangan</strong> tanpa perlu login.</p>
+              </div>
+            </div>
+
+          </div><!-- /faq-list -->
+
+          <div style="text-align:center;margin-top:3rem;padding:2rem;background:var(--bg-secondary);border-radius:var(--radius-lg)">
+            <i class="fas fa-headset" style="font-size:2rem;color:var(--primary);margin-bottom:0.75rem;display:block"></i>
+            <h3 style="margin-bottom:0.5rem">Masih Ada Pertanyaan?</h3>
+            <p style="color:var(--text-secondary);margin-bottom:1rem">Hubungi admin kami langsung melalui WhatsApp untuk bantuan lebih lanjut.</p>
+            <button class="btn btn-primary" onclick="App.toggleWA()">
+              <i class="fab fa-whatsapp"></i> Chat dengan Admin
+            </button>
+          </div>
+        </div>
+      </section>
+    </div><!-- /page-faq -->
+
+    <!-- ── PAGE: DASHBOARD ── -->
+    <div class="page" id="page-dashboard">
+      <section class="section">
+        <div class="container">
+          <div class="dashboard-header" id="dashHeader"></div>
+          <div id="dashContent"></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ── PAGE: ADMIN ── -->
+    <div class="page" id="page-admin">
+      <section class="section">
+        <div class="container">
+          <div class="admin-header">
+            <h2><i class="fas fa-tools"></i> Panel Admin</h2>
+            <p style="color:var(--text-secondary);margin-top:0.25rem">Kelola parkir, verifikasi pembayaran, dan atur sistem</p>
+          </div>
+          <div class="admin-tabs">
+            <button class="admin-tab active" onclick="Admin.switchTab('pending', this)">
+              <i class="fas fa-clock"></i> Pending
+              <span class="badge" id="pendingCount">0</span>
+            </button>
+            <button class="admin-tab" onclick="Admin.switchTab('users', this)">
+              <i class="fas fa-users"></i> Pengguna
+            </button>
+            <button class="admin-tab" onclick="Admin.switchTab('investor', this)">
+              <i class="fas fa-hand-holding-usd"></i> Investor
+            </button>
+            <button class="admin-tab" onclick="Admin.switchTab('settings', this)">
+              <i class="fas fa-cog"></i> Pengaturan
+            </button>
+          </div>
+          <div id="adminContent"></div>
+        </div>
+      </section>
+    </div>
+
+  </main>
+
+  <!-- ── FOOTER ── -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="footer-logo">
+            <i class="fas fa-square-parking"></i>
+            <span>Pradha<strong>Parking</strong></span>
+          </div>
+          <p>Platform penyewaan parkir terintegrasi untuk warga RT 08 &amp; RT 11 Komplek Pradha Ciganitri.</p>
+        </div>
+        <div class="footer-links">
+          <h4>Navigasi</h4>
+          <ul>
+            <li><a href="#" onclick="App.navigate('home')"><i class="fas fa-home"></i> Beranda</a></li>
+            <li><a href="#" onclick="App.navigate('availability')"><i class="fas fa-parking"></i> Ketersediaan</a></li>
+            <li><a href="#" onclick="App.navigate('financial')"><i class="fas fa-chart-bar"></i> Keuangan</a></li>
+            <li><a href="#" onclick="App.navigate('reviews')"><i class="fas fa-star"></i> Ulasan</a></li>
+            <li><a href="#" onclick="App.navigate('faq')"><i class="fas fa-question-circle"></i> FAQ</a></li>
+          </ul>
+        </div>
+        <div class="footer-contacts">
+          <h4>Hubungi Admin</h4>
+          <div id="footerContacts">
+            <p style="color:var(--text-tertiary);font-size:0.85rem">Memuat...</p>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2025 Pradha Ciganitri Parking System. Seluruh hak cipta dilindungi.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ── SCRIPTS ── -->
+  <script src="[cdnjs.cloudflare.com](https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js)"></script>
+  <script src="[cdnjs.cloudflare.com](https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js)"></script>
+  <script src="utils.js"></script>
+  <script src="api.js"></script>
+  <script src="auth.js"></script>
+  <script src="booking.js"></script>
+  <script src="dashboard.js"></script>
+  <script src="financial.js"></script>
+  <script src="admin.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
