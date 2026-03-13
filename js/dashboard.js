@@ -192,8 +192,8 @@ const Dashboard = (() => {
         fileName = prepared.filename;
         fileMimeType = prepared.mimeType;
         renderExtend();
-      } catch {
-        Utils.showToast('Gagal memproses file.', 'error');
+      } catch (err) {
+        Utils.showToast(err?.message || 'Gagal memproses file.', 'error');
       }
     };
 

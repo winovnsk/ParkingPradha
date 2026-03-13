@@ -124,6 +124,7 @@ const Utils = (() => {
 
   /**
    * Siapkan file upload agar konsisten untuk backend Apps Script.
+   * Menggabungkan: validasi format + fallback aman jika kompresi gagal.
    * - Gambar: coba dikompres, fallback ke file original bila gagal diproses canvas.
    * - PDF: kirim apa adanya sebagai Data URL.
    */
@@ -131,6 +132,14 @@ const Utils = (() => {
     if (!file) throw new Error('File tidak ditemukan.');
 
     const safeFilename = sanitizeFilename(file.name || `upload_${Date.now()}`);
+    const fileType = (file.type || '').toLowerCase();
+    const lowerFilename = safeFilename.toLowerCase();
+
+    const isPdf = fileType === 'application/pdf' || lowerFilename.endsWith('.pdf');
+    if (isPdf) {
+      const filename = lowerFilename.endsWith('.pdf') ? safeFilename : `${safeFilename}.pdf`;
+      return {
+        filename,
     const isPdf = file.type === 'application/pdf' || safeFilename.toLowerCase().endsWith('.pdf');
 
     if (isPdf) {
@@ -141,6 +150,20 @@ const Utils = (() => {
       };
     }
 
+    const allowedImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    const isAllowedImage = allowedImageTypes.includes(fileType) || /\.(jpe?g|png|webp)$/i.test(lowerFilename);
+
+    if (!isAllowedImage) {
+      throw new Error('Format file tidak didukung. Gunakan JPG, PNG, WEBP, atau PDF.');
+    }
+
+    const jpgFilename = lowerFilename.endsWith('.jpg') || lowerFilename.endsWith('.jpeg')
+      ? safeFilename
+      : `${safeFilename}.jpg`;
+
+    try {
+      return {
+        filename: jpgFilename,
     try {
       return {
         filename: safeFilename,
@@ -148,6 +171,15 @@ const Utils = (() => {
         mimeType: 'image/jpeg'
       };
     } catch {
+      // Fallback: tetap kirim file asli (hanya untuk format yang sudah tervalidasi).
+      const originalExtFilename = /\.(jpe?g|png|webp)$/i.test(lowerFilename)
+        ? safeFilename
+        : `${safeFilename}.jpg`;
+
+      return {
+        filename: originalExtFilename,
+        base64: await readFileAsDataURL(file),
+        mimeType: fileType || 'image/jpeg'
       return {
         filename: safeFilename,
         base64: await readFileAsDataURL(file),

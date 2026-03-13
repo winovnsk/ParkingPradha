@@ -246,7 +246,7 @@ const Admin = (() => {
       _invMimeType = prepared.mimeType;
       document.getElementById('invFileName').textContent = prepared.filename;
       document.getElementById('btnAddInv').disabled = false;
-    } catch { Utils.showToast('Gagal proses file.', 'error'); }
+    } catch (err) { Utils.showToast(err?.message || 'Gagal proses file.', 'error'); }
   }
 
   async function _submitInvestor() {

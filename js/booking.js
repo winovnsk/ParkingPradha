@@ -294,7 +294,7 @@ const Booking = (() => {
       document.getElementById('fileUploadZone').classList.add('has-file');
       document.getElementById('btnSubmitBooking').disabled = false;
     } catch (err) {
-      Utils.showToast('Gagal memproses file.', 'error');
+      Utils.showToast(err?.message || 'Gagal memproses file.', 'error');
     }
   }
 
