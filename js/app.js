@@ -20,6 +20,8 @@ const App = (() => {
     // Bind events
     bindEvents();
 
+    if (window.AutoLogout) AutoLogout.init();
+
     // Hide loader
     setTimeout(() => {
       document.getElementById('app-loader').classList.add('hide');
@@ -137,7 +139,8 @@ const App = (() => {
       [1, 3, 6, 12].forEach(d => {
         const key = `DISKON_${d}`;
         if (res.data[key] && res.data[key].value && res.data[key].value !== '0') {
-          discounts.push({ months: d, value: res.data[key].value });
+          const { discDisplayVal } = Utils.parseDiscountValue(res.data[key].value, 0);
+          if (discDisplayVal !== '0%') discounts.push({ months: d, value: discDisplayVal });
         }
       });
 
