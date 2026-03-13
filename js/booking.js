@@ -1,6 +1,6 @@
 /**
  * Booking Module — Wizard Step-by-Step (FIXED)
- * Perbaikan: Handle berbagai format diskon (desimal, persentase, angka)
+ * Perbaikan: Handle berbagai format diskon, return statement, dan startFromSpot
  */
 const Booking = (() => {
   let state = {
@@ -19,10 +19,6 @@ const Booking = (() => {
 
   /**
    * Helper function untuk parse nilai diskon
-   * Mendukung format: "15%", "15", "0.15"
-   * @param {string|number} discVal - Nilai diskon dari database
-   * @param {number} rawTotal - Total harga sebelum diskon
-   * @returns {{ discountAmount: number, discDisplayVal: string }}
    */
   function parseDiscount(discVal, rawTotal) {
     const discStr = discVal?.toString().trim() || '0';
@@ -30,7 +26,6 @@ const Booking = (() => {
     let discDisplayVal = '0';
 
     if (discStr.endsWith('%')) {
-      // Format: "15%", "10%", dll
       const pct = parseFloat(discStr.replace('%', ''));
       if (!isNaN(pct) && pct > 0) {
         discountAmount = rawTotal * (pct / 100);
@@ -40,11 +35,9 @@ const Booking = (() => {
       const numVal = parseFloat(discStr);
       if (!isNaN(numVal) && numVal > 0) {
         if (numVal >= 1) {
-          // Format: "15" (angka tanpa %), anggap sebagai persentase
           discountAmount = rawTotal * (numVal / 100);
           discDisplayVal = `${numVal}%`;
         } else {
-          // Format: "0.15" (desimal), sudah dalam bentuk pecahan
           discountAmount = rawTotal * numVal;
           discDisplayVal = `${Math.round(numVal * 100)}%`;
         }
@@ -55,24 +48,72 @@ const Booking = (() => {
   }
 
   function start(preferredType) {
-    state = { 
-      step: 1, 
-      type: preferredType || null, 
-      selectedSpots: [], 
-      duration: 1, 
-      totalPrice: 0, 
-      discount: 0, 
-      finalTotal: 0, 
-      file: null, 
-      fileBase64: null, 
-      spots: [], 
-      settings: {} 
+    state = {
+      step: 1,
+      type: preferredType || null,
+      selectedSpots: [],
+      duration: 1,
+      totalPrice: 0,
+      discount: 0,
+      finalTotal: 0,
+      file: null,
+      fileBase64: null,
+      spots: [],
+      settings: {}
     };
 
     if (!Auth.isLoggedIn()) {
       Auth.showLoginModal();
       return;
     }
+
+    renderWizard();
+  }
+
+  function startFromSpot(spotId, type) {
+    state = {
+      step: 1,
+      type: type,
+      selectedSpots: [],
+      duration: 1,
+      totalPrice: 0,
+      discount: 0,
+      finalTotal: 0,
+      file: null,
+      fileBase64: null,
+      spots: [],
+      settings: {}
+    };
+
+    if (!Auth.isLoggedIn()) {
+      Auth.showLoginModal();
+      return;
+    }
+
+    _startAndPreselect(spotId, type);
+  }
+
+  async function _startAndPreselect(spotId, type) {
+    try {
+      const [spotsRes, settingsRes] = await Promise.all([
+        API.getParkingSpots(),
+        API.getSettings()
+      ]);
+      state.spots = spotsRes.success ? spotsRes.data : [];
+      state.settings = settingsRes.success ? settingsRes.data : {};
+
+      const spot = state.spots.find(s => s.spot_id === spotId);
+      if (spot && spot.status === 'Available') {
+        const user = Auth.getUser();
+        state.selectedSpots.push({
+          spot_id: spot.spot_id,
+          type: spot.type,
+          price: spot.price,
+          plat_nomor: user.plat_nomor,
+          merk_kendaraan: user.merk_kendaraan
+        });
+      }
+    } catch { /* fallback */ }
 
     renderWizard();
   }
@@ -187,11 +228,9 @@ const Booking = (() => {
       const active = state.duration === d ? 'btn-primary' : 'btn-outline';
       const discKey = `DISKON_${d}`;
       const discVal = state.settings[discKey]?.value || '0';
-      
-      // === PERBAIKAN: Gunakan helper function ===
       const { discDisplayVal } = parseDiscount(discVal, 0);
-      const discLabel = discDisplayVal !== '0' 
-        ? ` <span style="color:var(--danger);font-weight:700">-${discDisplayVal}</span>` 
+      const discLabel = discDisplayVal !== '0'
+        ? ` <span style="color:var(--danger);font-weight:700">-${discDisplayVal}</span>`
         : '';
 
       return `<button class="btn ${active}" onclick="Booking.setDuration(${d})" style="flex:1;min-width:100px">
@@ -223,13 +262,14 @@ const Booking = (() => {
     state.totalPrice = rawTotal;
     state.discount = discountAmount;
     state.finalTotal = Math.max(0, rawTotal - discountAmount);
+
     const spotsDetail = state.selectedSpots.map(s =>
       `<div style="display:flex;justify-content:space-between;padding:0.5rem 0;border-bottom:1px solid var(--border-light)">
         <span><strong>${s.spot_id}</strong> (${s.type})</span>
         <span>${Utils.formatCurrency(s.price * state.duration)}</span>
       </div>`
     ).join('');
-    // Bank info dengan tombol Salin
+
     let bankHtml = '<p style="font-size:0.85rem;color:var(--text-secondary)">Memuat info rekening...</p>';
     try {
       const banks = [];
@@ -259,6 +299,7 @@ const Booking = (() => {
         `).join('');
       }
     } catch { /* fallback */ }
+
     return `
       <h3>Ringkasan Tagihan</h3>
       ${spotsDetail}
@@ -286,7 +327,7 @@ const Booking = (() => {
       </div>
     `;
   }
-  // Tambahkan fungsi copy nomor rekening
+
   function _copyBankNo(codeId, btnId) {
     const code = document.getElementById(codeId);
     const btn = document.getElementById(btnId);
@@ -299,7 +340,6 @@ const Booking = (() => {
         btn.innerHTML = '<i class="fas fa-copy"></i> Salin';
       }, 2000);
     }).catch(() => {
-      // Fallback untuk browser yang tidak support clipboard API
       const range = document.createRange();
       range.selectNode(code);
       window.getSelection().removeAllRanges();
@@ -314,65 +354,6 @@ const Booking = (() => {
       }, 2000);
     });
   }
-
-    // Tambahkan fungsi startFromSpot — dipanggil dari App.openBookingFromSpot
-  function startFromSpot(spotId, type) {
-    state = {
-      step: 1,
-      type: type,
-      selectedSpots: [],
-      duration: 1,
-      totalPrice: 0,
-      discount: 0,
-      finalTotal: 0,
-      file: null,
-      fileBase64: null,
-      spots: [],
-      settings: {}
-    };
-
-    if (!Auth.isLoggedIn()) {
-      Auth.showLoginModal();
-      return;
-    }
-
-    // Langsung load spots lalu pre-select spot yang dipilih
-    _startAndPreselect(spotId, type);
-  }
-
-  async function _startAndPreselect(spotId, type) {
-    try {
-      const [spotsRes, settingsRes] = await Promise.all([
-        API.getParkingSpots(),
-        API.getSettings()
-      ]);
-      state.spots = spotsRes.success ? spotsRes.data : [];
-      state.settings = settingsRes.success ? settingsRes.data : {};
-
-      // Auto-select spot yang dipilih
-      const spot = state.spots.find(s => s.spot_id === spotId);
-      if (spot && spot.status === 'Available') {
-        const user = Auth.getUser();
-        state.selectedSpots.push({
-          spot_id: spot.spot_id,
-          type: spot.type,
-          price: spot.price,
-          plat_nomor: user.plat_nomor,
-          merk_kendaraan: user.merk_kendaraan
-        });
-      }
-    } catch { /* fallback */ }
-
-    renderWizard();
-  }
-
-  // Update return object
-  return {
-    start, startFromSpot, renderWizard, selectType, toggleSpot,
-    setDuration, handleFile, submit,
-    nextStep, prevStep,
-    _copyBankNo
-  };
 
   function renderStep4() {
     return `
@@ -493,9 +474,11 @@ const Booking = (() => {
     }
   }
 
+  // ✅ SATU return statement saja, di akhir IIFE
   return {
-    start, renderWizard, selectType, toggleSpot,
+    start, startFromSpot, renderWizard, selectType, toggleSpot,
     setDuration, handleFile, submit,
-    nextStep, prevStep
+    nextStep, prevStep,
+    _copyBankNo
   };
 })();
