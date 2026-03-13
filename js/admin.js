@@ -234,15 +234,17 @@ const Admin = (() => {
     App.openModal(html);
   }
 
-  let _invBase64 = null, _invFileName = '';
+  let _invBase64 = null, _invFileName = '', _invMimeType = '';
 
   async function _handleInvFile(input) {
     const file = input.files[0];
     if (!file) return;
-    _invFileName = file.name;
-    document.getElementById('invFileName').textContent = file.name;
     try {
-      _invBase64 = await Utils.compressImage(file);
+      const prepared = await Utils.prepareUploadFile(file);
+      _invBase64 = prepared.base64;
+      _invFileName = prepared.filename;
+      _invMimeType = prepared.mimeType;
+      document.getElementById('invFileName').textContent = prepared.filename;
       document.getElementById('btnAddInv').disabled = false;
     } catch { Utils.showToast('Gagal proses file.', 'error'); }
   }
@@ -263,7 +265,8 @@ const Admin = (() => {
         tanggal_bayar: date,
         nominal_dibayar: Number(nominal),
         bukti_transfer_base64: _invBase64,
-        bukti_filename: _invFileName
+        bukti_filename: _invFileName,
+        bukti_mime_type: _invMimeType
       });
       Utils.showToast(res.message, res.success ? 'success' : 'error');
       if (res.success) {
