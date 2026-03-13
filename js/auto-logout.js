@@ -1,80 +1,66 @@
 /**
- * AutoLogout Module — Logout otomatis saat idle atau meninggalkan tab
- * Idle timeout: 60 detik
+ * AutoLogout Module — Logout otomatis saat idle atau menutup tab
+ * Idle timeout: 5 menit
  */
 const AutoLogout = (() => {
-  const IDLE_TIMEOUT = 60 * 1000; // 60 detik
-  const WARN_BEFORE = 15 * 1000;  // Tampilkan peringatan 15 detik sebelum logout
+  const IDLE_TIMEOUT = 5 * 60 * 1000; // 5 menit
+  const WARN_BEFORE = 30 * 1000;      // Peringatan 30 detik sebelum logout
 
   let idleTimer = null;
   let warnTimer = null;
   let warnBanner = null;
-  let _active = false;
+  let active = false;
 
   const EVENTS = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'click'];
 
   function init() {
-    // Mulai jika sudah login
-    if (Auth.isLoggedIn()) {
-      start();
-    }
+    if (Auth.isLoggedIn()) start();
 
-    // Auto-logout saat meninggalkan tab / window
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'hidden' && Auth.isLoggedIn()) {
-        // Simpan waktu meninggalkan tab
-        sessionStorage.setItem('pradha_tab_hidden', Date.now().toString());
-      } else if (document.visibilitystate === 'visible') {
-        const hiddenAt = sessionStorage.getItem('pradha_tab_hidden');
-        if (hiddenAt && Auth.isLoggedIn()) {
-          const elapsed = Date.now() - parseInt(hiddenAt, 10);
-          if (elapsed >= IDLE_TIMEOUT) {
-            _doLogout();
-          }
-        }
-        sessionStorage.removeItem('pradha_tab_hidden');
+      if (!Auth.isLoggedIn()) return;
+      if (document.visibilityState === 'hidden') {
+        _setLastActivity();
+      } else if (document.visibilityState === 'visible') {
+        _checkIdleSinceHidden();
+        reset();
       }
     });
 
-    // Pagehide (menutup tab / navigasi keluar)
-    window.addEventListener('pagehide', () => {
+    window.addEventListener('beforeunload', () => {
       if (Auth.isLoggedIn()) {
-        sessionStorage.setItem('pradha_tab_hidden', Date.now().toString());
+        Auth.clearUser();
       }
     });
   }
 
   function start() {
-    if (_active) return;
-    _active = true;
+    if (active) return;
+    active = true;
     EVENTS.forEach(ev => document.addEventListener(ev, reset, { passive: true }));
     _setTimers();
   }
 
   function stop() {
-    _active = false;
+    active = false;
     EVENTS.forEach(ev => document.removeEventListener(ev, reset));
     _clearTimers();
     _removeWarning();
   }
 
   function reset() {
-    if (!Auth.isLoggedIn()) { stop(); return; }
+    if (!Auth.isLoggedIn()) {
+      stop();
+      return;
+    }
+    _setLastActivity();
     _clearTimers();
     _removeWarning();
     _setTimers();
   }
 
   function _setTimers() {
-    // Peringatan 15 detik sebelum logout
-    warnTimer = setTimeout(() => {
-      _showWarning();
-    }, IDLE_TIMEOUT - WARN_BEFORE);
-
-    // Logout setelah idle penuh
-    idleTimer = setTimeout(() => {
-      _doLogout();
-    }, IDLE_TIMEOUT);
+    warnTimer = setTimeout(_showWarning, IDLE_TIMEOUT - WARN_BEFORE);
+    idleTimer = setTimeout(_doLogout, IDLE_TIMEOUT);
   }
 
   function _clearTimers() {
@@ -91,7 +77,7 @@ const AutoLogout = (() => {
     warnBanner.id = 'idleWarningBanner';
     warnBanner.innerHTML = `
       <i class="fas fa-clock"></i>
-      Sesi Anda akan berakhir dalam 15 detik karena tidak ada aktivitas.
+      Sesi Anda akan berakhir dalam 30 detik karena tidak ada aktivitas.
       <button onclick="AutoLogout.reset()" style="background:rgba(255,255,255,0.25);border:none;color:#fff;padding:0.3rem 0.75rem;border-radius:20px;cursor:pointer;font-size:0.8rem;margin-left:0.5rem;font-weight:600">
         Tetap Masuk
       </button>
@@ -110,7 +96,20 @@ const AutoLogout = (() => {
     if (!Auth.isLoggedIn()) return;
     Auth.clearUser();
     App.navigate('home');
-    Utils.showToast('Anda telah keluar secara otomatis karena tidak ada aktivitas.', 'warning');
+    Utils.showToast('Anda telah keluar otomatis karena tidak ada aktivitas selama 5 menit.', 'warning');
+  }
+
+  function _setLastActivity() {
+    sessionStorage.setItem('pradha_last_activity', String(Date.now()));
+  }
+
+  function _checkIdleSinceHidden() {
+    const lastActivity = parseInt(sessionStorage.getItem('pradha_last_activity') || '0', 10);
+    if (!lastActivity) return;
+    const elapsed = Date.now() - lastActivity;
+    if (elapsed >= IDLE_TIMEOUT) {
+      _doLogout();
+    }
   }
 
   return { init, start, stop, reset };

@@ -17,42 +17,6 @@ const Booking = (() => {
     settings: {}
   };
 
-  /**
-   * Helper function untuk parse nilai diskon
-   * Mendukung format: "15%", "15", "0.15"
-   * @param {string|number} discVal - Nilai diskon dari database
-   * @param {number} rawTotal - Total harga sebelum diskon
-   * @returns {{ discountAmount: number, discDisplayVal: string }}
-   */
-  function parseDiscount(discVal, rawTotal) {
-    const discStr = discVal?.toString().trim() || '0';
-    let discountAmount = 0;
-    let discDisplayVal = '0';
-
-    if (discStr.endsWith('%')) {
-      // Format: "15%", "10%", dll
-      const pct = parseFloat(discStr.replace('%', ''));
-      if (!isNaN(pct) && pct > 0) {
-        discountAmount = rawTotal * (pct / 100);
-        discDisplayVal = `${pct}%`;
-      }
-    } else {
-      const numVal = parseFloat(discStr);
-      if (!isNaN(numVal) && numVal > 0) {
-        if (numVal >= 1) {
-          // Format: "15" (angka tanpa %), anggap sebagai persentase
-          discountAmount = rawTotal * (numVal / 100);
-          discDisplayVal = `${numVal}%`;
-        } else {
-          // Format: "0.15" (desimal), sudah dalam bentuk pecahan
-          discountAmount = rawTotal * numVal;
-          discDisplayVal = `${Math.round(numVal * 100)}%`;
-        }
-      }
-    }
-
-    return { discountAmount, discDisplayVal };
-  }
 
   function start(preferredType) {
     state = { 
@@ -189,8 +153,8 @@ const Booking = (() => {
       const discVal = state.settings[discKey]?.value || '0';
       
       // === PERBAIKAN: Gunakan helper function ===
-      const { discDisplayVal } = parseDiscount(discVal, 0);
-      const discLabel = discDisplayVal !== '0' 
+      const { discDisplayVal } = Utils.parseDiscountValue(discVal, 0);
+      const discLabel = discDisplayVal !== '0%' 
         ? ` <span style="color:var(--danger);font-weight:700">-${discDisplayVal}</span>` 
         : '';
 
@@ -222,7 +186,7 @@ const Booking = (() => {
     const discVal = state.settings[discKey]?.value || '0';
     
     // === PERBAIKAN: Gunakan helper function ===
-    const { discountAmount, discDisplayVal } = parseDiscount(discVal, rawTotal);
+    const { discountAmount, discDisplayVal } = Utils.parseDiscountValue(discVal, rawTotal);
 
     state.totalPrice = rawTotal;
     state.discount = discountAmount;
@@ -244,12 +208,17 @@ const Booking = (() => {
       if (state.settings['BANK_DANA_NO']) banks.push({ name: 'DANA', no: state.settings['BANK_DANA_NO'].value, holder: state.settings['BANK_DANA_NAME']?.value || '' });
 
       bankHtml = banks.map(b => `
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:0.6rem;background:var(--bg-secondary);border-radius:var(--radius);margin-bottom:0.5rem">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:0.75rem;padding:0.6rem;background:var(--bg-secondary);border-radius:var(--radius);margin-bottom:0.5rem">
           <div>
             <strong style="font-size:0.85rem">${b.name}</strong>
             <p style="font-size:0.8rem;color:var(--text-secondary)">${b.holder}</p>
           </div>
-          <code style="font-size:0.9rem;font-weight:700">${b.no}</code>
+          <div style="display:flex;align-items:center;gap:0.5rem">
+            <code style="font-size:0.9rem;font-weight:700">${b.no}</code>
+            <button type="button" class="btn btn-outline btn-sm" onclick="Booking.copyAccountNumber('${b.no}')">
+              <i class="fas fa-copy"></i> Copy
+            </button>
+          </div>
         </div>
       `).join('');
     } catch { /* fallback */ }
@@ -398,9 +367,19 @@ const Booking = (() => {
     }
   }
 
+
+  async function copyAccountNumber(accountNumber) {
+    try {
+      await navigator.clipboard.writeText(accountNumber);
+      Utils.showToast('Nomor rekening berhasil disalin.', 'success');
+    } catch (err) {
+      Utils.showToast('Gagal menyalin nomor rekening.', 'error');
+    }
+  }
+
   return {
     start, renderWizard, selectType, toggleSpot,
-    setDuration, handleFile, submit,
+    setDuration, handleFile, submit, copyAccountNumber,
     nextStep, prevStep
   };
 })();

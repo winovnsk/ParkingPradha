@@ -128,9 +128,41 @@ const Utils = (() => {
     return months;
   }
 
+  /**
+   * Parse nilai diskon dari settings.
+   * Mendukung format: "15%", "15", "0.15"
+   */
+  function parseDiscountValue(discVal, rawTotal = 0) {
+    const discStr = discVal?.toString().trim() || '0';
+    let discountAmount = 0;
+    let discDisplayVal = '0%';
+
+    if (discStr.endsWith('%')) {
+      const pct = parseFloat(discStr.replace('%', ''));
+      if (!isNaN(pct) && pct > 0) {
+        discountAmount = rawTotal * (pct / 100);
+        discDisplayVal = `${pct}%`;
+      }
+    } else {
+      const numVal = parseFloat(discStr);
+      if (!isNaN(numVal) && numVal > 0) {
+        if (numVal >= 1) {
+          discountAmount = rawTotal * (numVal / 100);
+          discDisplayVal = `${numVal}%`;
+        } else {
+          discountAmount = rawTotal * numVal;
+          discDisplayVal = `${Math.round(numVal * 100)}%`;
+        }
+      }
+    }
+
+    return { discountAmount, discDisplayVal };
+  }
+
   return {
     formatCurrency, formatDate, formatShortDate,
     getInitials, renderStars, showToast,
-    compressImage, setLoading, getMonthOptions
+    compressImage, setLoading, getMonthOptions,
+    parseDiscountValue
   };
 })();
