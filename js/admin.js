@@ -261,9 +261,14 @@ const Admin = (() => {
     Utils.setLoading(btn, true);
 
     try {
+      const admin = Auth.getUser() || {};
       const res = await API.addInvestorReturn({
         tanggal_bayar: date,
         nominal_dibayar: Number(nominal),
+        uploader_name: admin.nama || '',
+        uploader_role: admin.role || 'Admin',
+        upload_timestamp: new Date().toISOString(),
+        upload_source: 'investor_return',
         bukti_transfer_base64: _invBase64,
         bukti_filename: _invFileName,
         bukti_mime_type: _invMimeType
