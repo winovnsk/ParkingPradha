@@ -137,6 +137,7 @@ const Dashboard = (() => {
     let selectedDuration = 1;
     let fileBase64 = null;
     let fileName = '';
+    let fileMimeType = '';
 
     function renderExtend() {
       const durations = [1, 3, 6, 12];
@@ -185,12 +186,14 @@ const Dashboard = (() => {
     Dashboard._handleExtFile = async (input) => {
       const file = input.files[0];
       if (!file) return;
-      fileName = file.name;
       try {
-        fileBase64 = await Utils.compressImage(file);
+        const prepared = await Utils.prepareUploadFile(file);
+        fileBase64 = prepared.base64;
+        fileName = prepared.filename;
+        fileMimeType = prepared.mimeType;
         renderExtend();
-      } catch {
-        Utils.showToast('Gagal memproses file.', 'error');
+      } catch (err) {
+        Utils.showToast(err?.message || 'Gagal memproses file.', 'error');
       }
     };
 
@@ -204,7 +207,8 @@ const Dashboard = (() => {
           trx_id: tId,
           bulan_tambah: selectedDuration,
           bukti_transfer_base64: fileBase64,
-          bukti_filename: fileName
+          bukti_filename: fileName,
+          bukti_mime_type: fileMimeType
         });
 
         if (res.success) {

@@ -12,7 +12,9 @@ const Booking = (() => {
     discount: 0,
     finalTotal: 0,
     file: null,
+    fileName: null,
     fileBase64: null,
+    fileMimeType: null,
     spots: [],
     settings: {}
   };
@@ -28,7 +30,9 @@ const Booking = (() => {
       discount: 0, 
       finalTotal: 0, 
       file: null, 
+      fileName: null,
       fileBase64: null, 
+      fileMimeType: null,
       spots: [], 
       settings: {} 
     };
@@ -279,15 +283,18 @@ const Booking = (() => {
       return;
     }
 
-    state.file = file;
-    document.getElementById('fileName').textContent = file.name;
-    document.getElementById('fileUploadZone').classList.add('has-file');
-    document.getElementById('btnSubmitBooking').disabled = false;
-
     try {
-      state.fileBase64 = await Utils.compressImage(file);
+      const prepared = await Utils.prepareUploadFile(file);
+      state.file = file;
+      state.fileName = prepared.filename;
+      state.fileBase64 = prepared.base64;
+      state.fileMimeType = prepared.mimeType;
+
+      document.getElementById('fileName').textContent = prepared.filename;
+      document.getElementById('fileUploadZone').classList.add('has-file');
+      document.getElementById('btnSubmitBooking').disabled = false;
     } catch (err) {
-      Utils.showToast('Gagal memproses file.', 'error');
+      Utils.showToast(err?.message || 'Gagal memproses file.', 'error');
     }
   }
 
@@ -311,7 +318,8 @@ const Booking = (() => {
         })),
         bulan_sewa: state.duration,
         bukti_transfer_base64: state.fileBase64,
-        bukti_filename: state.file.name
+        bukti_filename: state.fileName || state.file.name,
+        bukti_mime_type: state.fileMimeType
       };
 
       const res = await API.createBooking(payload);
