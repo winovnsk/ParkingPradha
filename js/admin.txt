@@ -53,9 +53,11 @@ const Admin = (() => {
           <td>${t.bulan_sewa} bln</td>
           <td><strong>${Utils.formatCurrency(t.total_final)}</strong></td>
           <td>
-            ${t.bukti_transfer_url && t.bukti_transfer_url !== 'UPLOAD_FAILED'
-              ? `<a href="${t.bukti_transfer_url}" target="_blank" class="btn btn-ghost btn-sm"><i class="fas fa-image"></i> Lihat</a>`
-              : '<span style="color:var(--text-tertiary)">-</span>'}
+            ${Utils.isLikelyHttpUrl(t.bukti_transfer_url)
+              ? `<a href="${t.bukti_transfer_url}" target="_blank" rel="noopener noreferrer" class="btn btn-ghost btn-sm"><i class="fas fa-image"></i> Lihat</a>`
+              : (Utils.isUploadFailedMarker(t.bukti_transfer_url)
+                ? '<span style="color:var(--danger);font-weight:600">Upload gagal</span>'
+                : '<span style="color:var(--text-tertiary)">-</span>')}
           </td>
           <td>
             <div style="display:flex;gap:0.25rem">
@@ -174,7 +176,9 @@ const Admin = (() => {
           <td><code style="font-size:0.75rem">${r.return_id}</code></td>
           <td>${Utils.formatShortDate(r.tanggal_bayar)}</td>
           <td><strong>${Utils.formatCurrency(r.nominal_dibayar)}</strong></td>
-          <td>${r.bukti_transfer_url ? `<a href="${r.bukti_transfer_url}" target="_blank" class="btn btn-ghost btn-sm"><i class="fas fa-image"></i></a>` : '-'}</td>
+          <td>${Utils.isLikelyHttpUrl(r.bukti_transfer_url)
+            ? `<a href="${r.bukti_transfer_url}" target="_blank" rel="noopener noreferrer" class="btn btn-ghost btn-sm"><i class="fas fa-image"></i></a>`
+            : '-'}</td>
         </tr>
       `).join('');
 
