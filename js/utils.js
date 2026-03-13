@@ -120,6 +120,15 @@ const Utils = (() => {
     });
   }
 
+  function isLikelyHttpUrl(value) {
+    return typeof value === 'string' && /^https?:\/\//i.test(value.trim());
+  }
+
+  function isUploadFailedMarker(value) {
+    if (value === null || value === undefined) return false;
+    return value.toString().trim().toLowerCase() === 'upload_failed';
+  }
+
   function setLoading(btn, loading) {
     if (loading) {
       btn.dataset.originalText = btn.innerHTML;
@@ -146,6 +155,7 @@ const Utils = (() => {
   return {
     formatCurrency, formatDate, formatShortDate,
     getInitials, renderStars, formatDiscountPercent, showToast,
-    compressImage, setLoading, getMonthOptions
+    compressImage, isLikelyHttpUrl, isUploadFailedMarker,
+    setLoading, getMonthOptions
   };
 })();
