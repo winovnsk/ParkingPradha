@@ -217,67 +217,162 @@ const Booking = (() => {
   async function renderStep3() {
     let rawTotal = 0;
     state.selectedSpots.forEach(s => { rawTotal += s.price * state.duration; });
-
     const discKey = `DISKON_${state.duration}`;
     const discVal = state.settings[discKey]?.value || '0';
-    
-    // === PERBAIKAN: Gunakan helper function ===
     const { discountAmount, discDisplayVal } = parseDiscount(discVal, rawTotal);
-
     state.totalPrice = rawTotal;
     state.discount = discountAmount;
     state.finalTotal = Math.max(0, rawTotal - discountAmount);
-
     const spotsDetail = state.selectedSpots.map(s =>
       `<div style="display:flex;justify-content:space-between;padding:0.5rem 0;border-bottom:1px solid var(--border-light)">
         <span><strong>${s.spot_id}</strong> (${s.type})</span>
         <span>${Utils.formatCurrency(s.price * state.duration)}</span>
       </div>`
     ).join('');
-
-    // Get bank info
+    // Bank info dengan tombol Salin
     let bankHtml = '<p style="font-size:0.85rem;color:var(--text-secondary)">Memuat info rekening...</p>';
     try {
       const banks = [];
-      if (state.settings['BANK_BCA_NO']) banks.push({ name: 'BCA', no: state.settings['BANK_BCA_NO'].value, holder: state.settings['BANK_BCA_NAME']?.value || '' });
-      if (state.settings['BANK_BRI_NO']) banks.push({ name: 'BRI', no: state.settings['BANK_BRI_NO'].value, holder: state.settings['BANK_BRI_NAME']?.value || '' });
-      if (state.settings['BANK_DANA_NO']) banks.push({ name: 'DANA', no: state.settings['BANK_DANA_NO'].value, holder: state.settings['BANK_DANA_NAME']?.value || '' });
-
-      bankHtml = banks.map(b => `
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:0.6rem;background:var(--bg-secondary);border-radius:var(--radius);margin-bottom:0.5rem">
-          <div>
-            <strong style="font-size:0.85rem">${b.name}</strong>
-            <p style="font-size:0.8rem;color:var(--text-secondary)">${b.holder}</p>
+      if (state.settings['BANK_BCA_NO']?.value)
+        banks.push({ name: 'BCA', no: state.settings['BANK_BCA_NO'].value, holder: state.settings['BANK_BCA_NAME']?.value || '' });
+      if (state.settings['BANK_BRI_NO']?.value)
+        banks.push({ name: 'BRI', no: state.settings['BANK_BRI_NO'].value, holder: state.settings['BANK_BRI_NAME']?.value || '' });
+      if (state.settings['BANK_DANA_NO']?.value)
+        banks.push({ name: 'DANA', no: state.settings['BANK_DANA_NO'].value, holder: state.settings['BANK_DANA_NAME']?.value || '' });
+      if (banks.length === 0) {
+        bankHtml = '<p style="font-size:0.85rem;color:var(--text-secondary)">Hubungi admin untuk informasi rekening.</p>';
+      } else {
+        bankHtml = banks.map((b, idx) => `
+          <div class="bank-row">
+            <div class="bank-row-info">
+              <strong>${b.name}</strong>
+              <div class="bank-holder">${b.holder}</div>
+            </div>
+            <div class="bank-row-number">
+              <code id="bankNo_${idx}">${b.no}</code>
+              <button class="btn-copy" id="copyBtn_${idx}"
+                onclick="Booking._copyBankNo('bankNo_${idx}', 'copyBtn_${idx}')">
+                <i class="fas fa-copy"></i> Salin
+              </button>
+            </div>
           </div>
-          <code style="font-size:0.9rem;font-weight:700">${b.no}</code>
-        </div>
-      `).join('');
+        `).join('');
+      }
     } catch { /* fallback */ }
-
     return `
       <h3>Ringkasan Tagihan</h3>
       ${spotsDetail}
       ${state.discount > 0 ? `
         <div style="display:flex;justify-content:space-between;padding:0.5rem 0;color:var(--success)">
-          <span>Diskon (${discDisplayVal})</span>
+          <span><i class="fas fa-tag"></i> Diskon (${discDisplayVal})</span>
           <span>-${Utils.formatCurrency(state.discount)}</span>
         </div>` : ''}
       <div style="display:flex;justify-content:space-between;padding:0.75rem 0;font-size:1.2rem;font-weight:800;border-top:2px solid var(--text-primary)">
         <span>TOTAL</span>
         <span style="color:var(--primary)">${Utils.formatCurrency(state.finalTotal)}</span>
       </div>
-
       <div style="margin-top:1.5rem">
-        <h3 style="font-size:0.95rem;margin-bottom:0.75rem"><i class="fas fa-university"></i> Transfer ke:</h3>
+        <h3 style="font-size:0.95rem;margin-bottom:0.75rem">
+          <i class="fas fa-university"></i> Transfer ke salah satu rekening berikut:
+        </h3>
+        <p style="font-size:0.8rem;color:var(--text-secondary);margin-bottom:0.75rem">
+          Klik tombol <strong>Salin</strong> di samping nomor rekening untuk menyalin otomatis.
+        </p>
         ${bankHtml}
       </div>
-
       <div style="margin-top:1.5rem;display:flex;gap:0.5rem;justify-content:space-between">
         <button class="btn btn-ghost" onclick="Booking.prevStep()"><i class="fas fa-arrow-left"></i> Kembali</button>
         <button class="btn btn-primary" onclick="Booking.nextStep()">Upload Bukti <i class="fas fa-arrow-right"></i></button>
       </div>
     `;
   }
+  // Tambahkan fungsi copy nomor rekening
+  function _copyBankNo(codeId, btnId) {
+    const code = document.getElementById(codeId);
+    const btn = document.getElementById(btnId);
+    if (!code || !btn) return;
+    navigator.clipboard.writeText(code.textContent.trim()).then(() => {
+      btn.classList.add('copied');
+      btn.innerHTML = '<i class="fas fa-check"></i> Tersalin!';
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        btn.innerHTML = '<i class="fas fa-copy"></i> Salin';
+      }, 2000);
+    }).catch(() => {
+      // Fallback untuk browser yang tidak support clipboard API
+      const range = document.createRange();
+      range.selectNode(code);
+      window.getSelection().removeAllRanges();
+      window.getSelection().addRange(range);
+      document.execCommand('copy');
+      window.getSelection().removeAllRanges();
+      btn.classList.add('copied');
+      btn.innerHTML = '<i class="fas fa-check"></i> Tersalin!';
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        btn.innerHTML = '<i class="fas fa-copy"></i> Salin';
+      }, 2000);
+    });
+  }
+
+    // Tambahkan fungsi startFromSpot — dipanggil dari App.openBookingFromSpot
+  function startFromSpot(spotId, type) {
+    state = {
+      step: 1,
+      type: type,
+      selectedSpots: [],
+      duration: 1,
+      totalPrice: 0,
+      discount: 0,
+      finalTotal: 0,
+      file: null,
+      fileBase64: null,
+      spots: [],
+      settings: {}
+    };
+
+    if (!Auth.isLoggedIn()) {
+      Auth.showLoginModal();
+      return;
+    }
+
+    // Langsung load spots lalu pre-select spot yang dipilih
+    _startAndPreselect(spotId, type);
+  }
+
+  async function _startAndPreselect(spotId, type) {
+    try {
+      const [spotsRes, settingsRes] = await Promise.all([
+        API.getParkingSpots(),
+        API.getSettings()
+      ]);
+      state.spots = spotsRes.success ? spotsRes.data : [];
+      state.settings = settingsRes.success ? settingsRes.data : {};
+
+      // Auto-select spot yang dipilih
+      const spot = state.spots.find(s => s.spot_id === spotId);
+      if (spot && spot.status === 'Available') {
+        const user = Auth.getUser();
+        state.selectedSpots.push({
+          spot_id: spot.spot_id,
+          type: spot.type,
+          price: spot.price,
+          plat_nomor: user.plat_nomor,
+          merk_kendaraan: user.merk_kendaraan
+        });
+      }
+    } catch { /* fallback */ }
+
+    renderWizard();
+  }
+
+  // Update return object
+  return {
+    start, startFromSpot, renderWizard, selectType, toggleSpot,
+    setDuration, handleFile, submit,
+    nextStep, prevStep,
+    _copyBankNo
+  };
 
   function renderStep4() {
     return `
