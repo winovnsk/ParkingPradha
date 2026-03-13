@@ -1,0 +1,1416 @@
+// ============================================================
+// ⚙️ KONFIGURASI UTAMA
+// ============================================================
+const SPREADSHEET_ID = '1gpLgAkN0Vf5LsohxHoA8Hcrug_oLNBvE7ObIJc5oofY';
+const DRIVE_FOLDER_ID = '13bXPdfhUCsycid_svPfg2IQ-hpgp67Do';
+
+const SHEET = {
+  USERS: 'USERS',
+  PARKING_SPOTS: 'PARKING_SPOTS',
+  TRANSACTIONS: 'TRANSACTIONS',
+  APP_SETTINGS: 'APP_SETTINGS',
+  INVESTOR_RETURNS: 'INVESTOR_RETURNS',
+  ADMIN_CONTACTS: 'ADMIN_CONTACTS',
+  REVIEWS: 'REVIEWS'
+};
+
+// ============================================================
+// 🏗️ INISIALISASI SHEET & HEADER OTOMATIS
+// Jalankan fungsi ini SEKALI saat pertama kali setup.
+// Akan membuat semua 7 tab + header tanpa menghapus data existing.
+// ============================================================
+
+function initializeSheets() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const existingSheets = ss.getSheets().map(s => s.getName());
+
+  const sheetSchemas = {
+    USERS: {
+      headers: ['id', 'nama', 'no_hp', 'blok_rumah', 'merk_kendaraan', 'plat_nomor', 'password', 'role', 'created_at'],
+      colWidths: [140, 180, 150, 120, 160, 140, 140, 80, 160]
+    },
+    PARKING_SPOTS: {
+      headers: ['spot_id', 'type', 'price', 'status'],
+      colWidths: [120, 100, 100, 100]
+    },
+    TRANSACTIONS: {
+      headers: ['trx_id', 'user_id', 'spot_id', 'plat_nomor', 'merk_kendaraan', 'bulan_sewa', 'total_bayar', 'diskon', 'total_final', 'bukti_transfer_url', 'status', 'start_date', 'end_date', 'created_at'],
+      colWidths: [140, 140, 100, 130, 160, 100, 120, 100, 120, 250, 100, 120, 120, 160]
+    },
+    APP_SETTINGS: {
+      headers: ['key', 'value', 'description'],
+      colWidths: [200, 250, 300]
+    },
+    INVESTOR_RETURNS: {
+      headers: ['return_id', 'tanggal_bayar', 'nominal_dibayar', 'bukti_transfer_url', 'created_at'],
+      colWidths: [140, 140, 150, 250, 160]
+    },
+    ADMIN_CONTACTS: {
+      headers: ['blok', 'nama_admin', 'no_whatsapp'],
+      colWidths: [100, 180, 180]
+    },
+    REVIEWS: {
+      headers: ['review_id', 'nama_user', 'rating', 'komentar', 'timestamp'],
+      colWidths: [140, 180, 80, 350, 160]
+    }
+  };
+
+  const results = [];
+
+  for (const [sheetName, schema] of Object.entries(sheetSchemas)) {
+    let sheet;
+
+    // Buat sheet jika belum ada
+    if (existingSheets.includes(sheetName)) {
+      sheet = ss.getSheetByName(sheetName);
+      // Cek apakah header sudah ada
+      const existingHeaders = sheet.getRange(1, 1, 1, sheet.getMaxColumns()).getValues()[0].filter(h => h !== '');
+      if (existingHeaders.length > 0) {
+        results.push(`✅ "${sheetName}" sudah ada dengan header. Dilewati.`);
+        continue;
+      }
+    } else {
+      sheet = ss.insertSheet(sheetName);
+    }
+
+    // Tulis header
+    const headerRange = sheet.getRange(1, 1, 1, schema.headers.length);
+    headerRange.setValues([schema.headers]);
+
+    // Styling header
+    headerRange.setBackground('#1a73e8')
+      .setFontColor('#ffffff')
+      .setFontWeight('bold')
+      .setFontSize(10)
+      .setHorizontalAlignment('center')
+      .setVerticalAlignment('middle')
+      .setWrap(true);
+
+    // Set row height untuk header
+    sheet.setRowHeight(1, 36);
+
+    // Set column widths
+    schema.colWidths.forEach((width, i) => {
+      sheet.setColumnWidth(i + 1, width);
+    });
+
+    // Freeze header row
+    sheet.setFrozenRows(1);
+
+    // Hapus kolom berlebih (opsional, biar rapi)
+    const maxCols = sheet.getMaxColumns();
+    if (maxCols > schema.headers.length) {
+      sheet.deleteColumns(schema.headers.length + 1, maxCols - schema.headers.length);
+    }
+
+    results.push(`🆕 "${sheetName}" berhasil dibuat + header diterapkan.`);
+  }
+
+  // Hapus "Sheet1" default jika ada dan kosong
+  try {
+    const defaultSheet = ss.getSheetByName('Sheet1');
+    if (defaultSheet && ss.getSheets().length > 1) {
+      const defaultData = defaultSheet.getDataRange().getValues();
+      if (defaultData.length <= 1 && defaultData[0].join('').trim() === '') {
+        ss.deleteSheet(defaultSheet);
+        results.push(`🗑️ "Sheet1" default dihapus.`);
+      }
+    }
+  } catch (e) { /* abaikan */ }
+
+  Logger.log('=== INISIALISASI SELESAI ===');
+  results.forEach(r => Logger.log(r));
+
+  return { success: true, message: 'Inisialisasi selesai.', detail: results };
+}
+
+
+// ============================================================
+// 🧪 SEED DUMMY DATA — Admin, Warga, Spot, Transaksi, dll
+// Jalankan SETELAH initializeSheets()
+// ============================================================
+
+function seedDummyData() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const results = [];
+
+  // ──────────────────────────────────────
+  // 1) USERS — 2 Admin + 6 Warga
+  // ──────────────────────────────────────
+  const usersSheet = ss.getSheetByName(SHEET.USERS);
+  const existingUsers = _getSheetData(usersSheet);
+  if (existingUsers.length > 0) {
+    results.push('⏭️ USERS sudah ada data. Dilewati.');
+  } else {
+    const users = [
+      // Admin
+      ['ADM-001', 'Admin Dadi', '6281320912117', 'Blok A', '-', '-', 'admin123', 'Admin', '2025-01-01'],
+      ['ADM-002', 'Admin Agung', '628568999001', 'Blok B', '-', '-', 'admin456', 'Admin', '2025-01-01'],
+      // Warga
+      ['USR-A1B2C3D4', 'Budi Santoso', '6281234567801', 'A-01', 'Toyota Avanza', 'D 1234 AB', 'budi123', 'Warga', '2025-01-15'],
+      ['USR-E5F6G7H8', 'Siti Nurhaliza', '6281234567802', 'A-05', 'Honda Brio', 'D 5678 CD', 'siti123', 'Warga', '2025-01-20'],
+      ['USR-I9J0K1L2', 'Andi Wijaya', '6281234567803', 'B-03', 'Suzuki Ertiga', 'D 9012 EF', 'andi123', 'Warga', '2025-02-01'],
+      ['USR-M3N4O5P6', 'Rina Marlina', '6281234567804', 'B-07', 'Daihatsu Xenia', 'D 3456 GH', 'rina123', 'Warga', '2025-02-10'],
+      ['USR-Q7R8S9T0', 'Hendra Gunawan', '6281234567805', 'A-10', 'Mitsubishi Pajero', 'D 7890 IJ', 'hendra123', 'Warga', '2025-03-01'],
+      ['USR-U1V2W3X4', 'Dewi Lestari', '6281234567806', 'B-12', 'Honda HRV', 'D 2345 KL', 'dewi123', 'Warga', '2025-03-15'],
+    ];
+    users.forEach(row => usersSheet.appendRow(row));
+    results.push(`✅ USERS: ${users.length} akun ditambahkan (2 Admin + 6 Warga).`);
+  }
+
+  // ──────────────────────────────────────
+  // 2) PARKING_SPOTS — 14 Premium + 10 Regular
+  // ──────────────────────────────────────
+  const spotsSheet = ss.getSheetByName(SHEET.PARKING_SPOTS);
+  const existingSpots = _getSheetData(spotsSheet);
+  if (existingSpots.length > 0) {
+    results.push('⏭️ PARKING_SPOTS sudah ada data. Dilewati.');
+  } else {
+    const spots = [];
+    // 14 Premium — PRM-01 s/d PRM-14
+    for (let i = 1; i <= 14; i++) {
+      const num = String(i).padStart(2, '0');
+      const status = i <= 4 ? 'Booked' : 'Available'; // 4 pertama di-book dummy
+      spots.push([`PRM-${num}`, 'Premium', 150000, status]);
+    }
+    // 10 Regular — REG-01 s/d REG-10
+    for (let i = 1; i <= 10; i++) {
+      const num = String(i).padStart(2, '0');
+      const status = i <= 2 ? 'Booked' : 'Available'; // 2 pertama di-book dummy
+      spots.push([`REG-${num}`, 'Regular', 50000, status]);
+    }
+    spots.forEach(row => spotsSheet.appendRow(row));
+    results.push(`✅ PARKING_SPOTS: ${spots.length} slot ditambahkan (14 Premium + 10 Regular).`);
+  }
+
+  // ──────────────────────────────────────
+  // 3) TRANSACTIONS — 6 transaksi (variasi status)
+  // ──────────────────────────────────────
+  const trxSheet = ss.getSheetByName(SHEET.TRANSACTIONS);
+  const existingTrx = _getSheetData(trxSheet);
+  if (existingTrx.length > 0) {
+    results.push('⏭️ TRANSACTIONS sudah ada data. Dilewati.');
+  } else {
+    const transactions = [
+      // Active — Budi sewa PRM-01, 3 bulan
+      ['TRX-00000001', 'USR-A1B2C3D4', 'PRM-01', 'D 1234 AB', 'Toyota Avanza', 3, 450000, 22500, 427500, 'https://drive.google.com/dummy-bukti-01', 'Active', '2025-06-01', '2025-09-01', '2025-06-01'],
+      // Active — Siti sewa PRM-02, 6 bulan
+      ['TRX-00000002', 'USR-E5F6G7H8', 'PRM-02', 'D 5678 CD', 'Honda Brio', 6, 900000, 90000, 810000, 'https://drive.google.com/dummy-bukti-02', 'Active', '2025-05-01', '2025-11-01', '2025-05-01'],
+      // Active — Andi sewa REG-01, 1 bulan
+      ['TRX-00000003', 'USR-I9J0K1L2', 'REG-01', 'D 9012 EF', 'Suzuki Ertiga', 1, 50000, 0, 50000, 'https://drive.google.com/dummy-bukti-03', 'Active', '2025-06-15', '2025-07-15', '2025-06-15'],
+      // Active — Rina sewa PRM-03, 12 bulan
+      ['TRX-00000004', 'USR-M3N4O5P6', 'PRM-03', 'D 3456 GH', 'Daihatsu Xenia', 12, 1800000, 270000, 1530000, 'https://drive.google.com/dummy-bukti-04', 'Active', '2025-04-01', '2026-04-01', '2025-04-01'],
+      // Pending — Hendra booking PRM-04, menunggu verifikasi
+      ['TRX-00000005', 'USR-Q7R8S9T0', 'PRM-04', 'D 7890 IJ', 'Mitsubishi Pajero', 3, 450000, 22500, 427500, 'https://drive.google.com/dummy-bukti-05', 'Pending', '2025-07-01', '2025-10-01', '2025-07-01'],
+      // Pending — Dewi booking REG-02, menunggu verifikasi
+      ['TRX-00000006', 'USR-U1V2W3X4', 'REG-02', 'D 2345 KL', 'Honda HRV', 6, 300000, 30000, 270000, 'https://drive.google.com/dummy-bukti-06', 'Pending', '2025-07-01', '2026-01-01', '2025-07-01'],
+    ];
+    transactions.forEach(row => trxSheet.appendRow(row));
+    results.push(`✅ TRANSACTIONS: ${transactions.length} transaksi ditambahkan (4 Active + 2 Pending).`);
+  }
+
+  // ──────────────────────────────────────
+  // 4) APP_SETTINGS — Rekening, Diskon, Kontak
+  // ──────────────────────────────────────
+  const settingsSheet = ss.getSheetByName(SHEET.APP_SETTINGS);
+  const existingSettings = _getSheetData(settingsSheet);
+  if (existingSettings.length > 0) {
+    results.push('⏭️ APP_SETTINGS sudah ada data. Dilewati.');
+  } else {
+    const settings = [
+      // Rekening Bank
+      ['BANK_BCA_NO', '1234567890', 'Nomor Rekening BCA'],
+      ['BANK_BCA_NAME', 'Dadi Mulyadi', 'Nama Pemilik Rekening BCA'],
+      ['BANK_BRI_NO', '0987654321', 'Nomor Rekening BRI'],
+      ['BANK_BRI_NAME', 'Dadi Mulyadi', 'Nama Pemilik Rekening BRI'],
+      ['BANK_DANA_NO', '6281320912117', 'Nomor Akun DANA'],
+      ['BANK_DANA_NAME', 'Dadi Mulyadi', 'Nama Akun DANA'],
+      ['BANK_QRIS_URL', 'https://drive.google.com/dummy-qris', 'Link Gambar QRIS'],
+      // Diskon per Durasi
+      ['DISKON_1', '0', 'Diskon untuk sewa 1 bulan (0 = tidak ada)'],
+      ['DISKON_3', '5%', 'Diskon 5% untuk sewa 3 bulan'],
+      ['DISKON_6', '10%', 'Diskon 10% untuk sewa 6 bulan'],
+      ['DISKON_12', '15%', 'Diskon 15% untuk sewa 12 bulan'],
+      // Kontak CS
+      ['CS_WHATSAPP_PRIMARY', '6281320912117', 'Nomor WA CS Utama (Blok A)'],
+      ['CS_WHATSAPP_SECONDARY', '628568999001', 'Nomor WA CS Cadangan (Blok B)'],
+      // Harga
+      ['HARGA_PREMIUM', '150000', 'Harga sewa Premium per bulan'],
+      ['HARGA_REGULAR', '50000', 'Harga sewa Regular per bulan'],
+      // Target Investasi
+      ['TARGET_INVESTASI', '41300000', 'Target total pengembalian dana investor'],
+    ];
+    settings.forEach(row => settingsSheet.appendRow(row));
+    results.push(`✅ APP_SETTINGS: ${settings.length} pengaturan ditambahkan.`);
+  }
+
+  // ──────────────────────────────────────
+  // 5) INVESTOR_RETURNS — 3 Cicilan Dummy
+  // ──────────────────────────────────────
+  const investorSheet = ss.getSheetByName(SHEET.INVESTOR_RETURNS);
+  const existingInvestor = _getSheetData(investorSheet);
+  if (existingInvestor.length > 0) {
+    results.push('⏭️ INVESTOR_RETURNS sudah ada data. Dilewati.');
+  } else {
+    const returns = [
+      ['INV-00000001', '2025-02-15', 5000000, 'https://drive.google.com/dummy-inv-01', '2025-02-15'],
+      ['INV-00000002', '2025-03-15', 5000000, 'https://drive.google.com/dummy-inv-02', '2025-03-15'],
+      ['INV-00000003', '2025-04-15', 3000000, 'https://drive.google.com/dummy-inv-03', '2025-04-15'],
+      ['INV-00000004', '2025-05-15', 5000000, 'https://drive.google.com/dummy-inv-04', '2025-05-15'],
+      ['INV-00000005', '2025-06-15', 2500000, 'https://drive.google.com/dummy-inv-05', '2025-06-15'],
+    ];
+    returns.forEach(row => investorSheet.appendRow(row));
+    results.push(`✅ INVESTOR_RETURNS: ${returns.length} cicilan dummy ditambahkan (total Rp20.500.000).`);
+  }
+
+  // ──────────────────────────────────────
+  // 6) ADMIN_CONTACTS — 2 kontak admin
+  // ──────────────────────────────────────
+  const contactsSheet = ss.getSheetByName(SHEET.ADMIN_CONTACTS);
+  const existingContacts = _getSheetData(contactsSheet);
+  if (existingContacts.length > 0) {
+    results.push('⏭️ ADMIN_CONTACTS sudah ada data. Dilewati.');
+  } else {
+    const contacts = [
+      ['Blok A', 'Bpk Dadi', '6281320912117'],
+      ['Blok B', 'Agung', '628568999001'],
+    ];
+    contacts.forEach(row => contactsSheet.appendRow(row));
+    results.push(`✅ ADMIN_CONTACTS: ${contacts.length} kontak ditambahkan.`);
+  }
+
+  // ──────────────────────────────────────
+  // 7) REVIEWS — 5 Ulasan Dummy
+  // ──────────────────────────────────────
+  const reviewsSheet = ss.getSheetByName(SHEET.REVIEWS);
+  const existingReviews = _getSheetData(reviewsSheet);
+  if (existingReviews.length > 0) {
+    results.push('⏭️ REVIEWS sudah ada data. Dilewati.');
+  } else {
+    const reviews = [
+      ['REV-00000001', 'Budi Santoso', 5, 'Parkir sangat aman dan nyaman! Kanopi teduhnya sangat membantu di musim hujan. Recommended!', '2025-03-10'],
+      ['REV-00000002', 'Siti Nurhaliza', 4, 'Tempatnya bagus, CCTV aktif 24 jam. Cuma kadang paving bloknya agak licin kalau hujan.', '2025-03-15'],
+      ['REV-00000003', 'Andi Wijaya', 5, 'Harga regular sangat terjangkau untuk area SUTET. Security rajin patroli, mobil aman.', '2025-04-02'],
+      ['REV-00000004', 'Rina Marlina', 4, 'Sudah langganan 1 tahun, tidak pernah ada masalah. Diskon tahunan lumayan banget!', '2025-04-20'],
+      ['REV-00000005', 'Hendra Gunawan', 5, 'LED-nya terang banget malam hari. Pajero aman sentosa di area premium. Top!', '2025-05-05'],
+    ];
+    reviews.forEach(row => reviewsSheet.appendRow(row));
+    results.push(`✅ REVIEWS: ${reviews.length} ulasan dummy ditambahkan.`);
+  }
+
+  Logger.log('=== SEED DUMMY DATA SELESAI ===');
+  results.forEach(r => Logger.log(r));
+
+  return { success: true, message: 'Seed dummy data selesai.', detail: results };
+}
+
+
+// ============================================================
+// 🚀 SETUP LENGKAP — Jalankan SEKALI untuk inisialisasi + dummy
+// Gabungan initializeSheets() + seedDummyData()
+// ============================================================
+
+function fullSetup() {
+  Logger.log('═══════════════════════════════════════');
+  Logger.log('🚀 MEMULAI FULL SETUP...');
+  Logger.log('═══════════════════════════════════════');
+
+  const initResult = initializeSheets();
+  const seedResult = seedDummyData();
+
+  Logger.log('');
+  Logger.log('═══════════════════════════════════════');
+  Logger.log('✅ FULL SETUP SELESAI!');
+  Logger.log('═══════════════════════════════════════');
+  Logger.log('');
+  Logger.log('📋 Akun Login Dummy:');
+  Logger.log('─────────────────────────────────────');
+  Logger.log('👑 ADMIN 1  → Nama: Admin Dadi    | HP: 6281320912117  | Pass: admin123');
+  Logger.log('👑 ADMIN 2  → Nama: Admin Agung   | HP: 628568999001   | Pass: admin456');
+  Logger.log('─────────────────────────────────────');
+  Logger.log('👤 Warga 1  → Nama: Budi Santoso      | HP: 6281234567801 | Pass: budi123');
+  Logger.log('👤 Warga 2  → Nama: Siti Nurhaliza     | HP: 6281234567802 | Pass: siti123');
+  Logger.log('👤 Warga 3  → Nama: Andi Wijaya        | HP: 6281234567803 | Pass: andi123');
+  Logger.log('👤 Warga 4  → Nama: Rina Marlina       | HP: 6281234567804 | Pass: rina123');
+  Logger.log('👤 Warga 5  → Nama: Hendra Gunawan     | HP: 6281234567805 | Pass: hendra123');
+  Logger.log('👤 Warga 6  → Nama: Dewi Lestari       | HP: 6281234567806 | Pass: dewi123');
+  Logger.log('─────────────────────────────────────');
+  Logger.log('🅿️ Slot Parkir: 14 Premium (PRM-01~14) + 10 Regular (REG-01~10)');
+  Logger.log('💳 Transaksi: 4 Active + 2 Pending');
+  Logger.log('💰 Investor: 5 cicilan (Rp20.500.000 dari target Rp41.300.000)');
+  Logger.log('⭐ Reviews: 5 ulasan');
+
+  return {
+    success: true,
+    message: 'Full setup berhasil!',
+    init: initResult,
+    seed: seedResult,
+    credentials: {
+      admin: [
+        { nama: 'Admin Dadi', no_hp: '6281320912117', password: 'admin123' },
+        { nama: 'Admin Agung', no_hp: '628568999001', password: 'admin456' }
+      ],
+      warga: [
+        { nama: 'Budi Santoso', no_hp: '6281234567801', password: 'budi123' },
+        { nama: 'Siti Nurhaliza', no_hp: '6281234567802', password: 'siti123' },
+        { nama: 'Andi Wijaya', no_hp: '6281234567803', password: 'andi123' },
+        { nama: 'Rina Marlina', no_hp: '6281234567804', password: 'rina123' },
+        { nama: 'Hendra Gunawan', no_hp: '6281234567805', password: 'hendra123' },
+        { nama: 'Dewi Lestari', no_hp: '6281234567806', password: 'dewi123' }
+      ]
+    }
+  };
+}
+
+
+// ============================================================
+// 🔄 RESET & REBUILD — Hapus semua data lalu seed ulang
+// ⚠️ HATI-HATI: Menghapus SEMUA data di semua tab!
+// ============================================================
+
+function resetAndRebuild() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+
+  const sheetNames = Object.values(SHEET);
+  for (const name of sheetNames) {
+    const sheet = ss.getSheetByName(name);
+    if (sheet) {
+      const lastRow = sheet.getLastRow();
+      if (lastRow > 1) {
+        sheet.deleteRows(2, lastRow - 1); // Hapus semua kecuali header
+      }
+    }
+  }
+
+  Logger.log('🗑️ Semua data dihapus (header dipertahankan).');
+  Logger.log('🔄 Mengisi ulang dummy data...');
+
+  const seedResult = seedDummyData();
+
+  Logger.log('✅ Reset & Rebuild selesai!');
+  return { success: true, message: 'Reset & Rebuild selesai.', seed: seedResult };
+}
+
+
+// ============================================================
+// 🌐 CORS & HTTP HANDLER
+// ============================================================
+function doGet(e) {
+  const action = e.parameter.action;
+  let result;
+
+  try {
+    switch (action) {
+      case 'getAvailability':
+        result = getAvailability();
+        break;
+      case 'getSettings':
+        result = getSettings();
+        break;
+      case 'getAdminContacts':
+        result = getAdminContacts();
+        break;
+      case 'getReviews':
+        result = getReviews();
+        break;
+      case 'getFinancialReport':
+        result = getFinancialReport(e.parameter.startMonth, e.parameter.endMonth);
+        break;
+      case 'getUserDashboard':
+        result = getUserDashboard(e.parameter.user_id);
+        break;
+      case 'getTransactionHistory':
+        result = getTransactionHistory(e.parameter.user_id);
+        break;
+      case 'getPendingTransactions':
+        result = getPendingTransactions();
+        break;
+      case 'getInvestorReturns':
+        result = getInvestorReturns();
+        break;
+      case 'getParkingSpots':
+        result = getParkingSpots(e.parameter.type);
+        break;
+      case 'getAllUsers':
+        result = getAllUsers();
+        break;
+      default:
+        result = { success: false, message: 'Action tidak dikenali.' };
+    }
+  } catch (err) {
+    result = { success: false, message: err.message };
+  }
+
+  return ContentService
+    .createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  let payload;
+  try {
+    payload = JSON.parse(e.postData.contents);
+  } catch (err) {
+    return _jsonResponse({ success: false, message: 'Payload JSON tidak valid.' });
+  }
+
+  const action = payload.action;
+  let result;
+
+  try {
+    switch (action) {
+      case 'register':
+        result = registerUser(payload);
+        break;
+      case 'login':
+        result = loginUser(payload);
+        break;
+      case 'createBooking':
+        result = createBooking(payload);
+        break;
+      case 'extendBooking':
+        result = extendBooking(payload);
+        break;
+      case 'verifyTransaction':
+        result = verifyTransaction(payload);
+        break;
+      case 'rejectTransaction':
+        result = rejectTransaction(payload);
+        break;
+      case 'addInvestorReturn':
+        result = addInvestorReturn(payload);
+        break;
+      case 'updateSetting':
+        result = updateSetting(payload);
+        break;
+      case 'resetPassword':
+        result = resetPassword(payload);
+        break;
+      case 'addReview':
+        result = addReview(payload);
+        break;
+      case 'updateAdminContact':
+        result = updateAdminContact(payload);
+        break;
+      default:
+        result = { success: false, message: 'Action tidak dikenali.' };
+    }
+  } catch (err) {
+    result = { success: false, message: err.message };
+  }
+
+  return _jsonResponse(result);
+}
+
+function _jsonResponse(data) {
+  return ContentService
+    .createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ============================================================
+// 🔑 AUTENTIKASI (Login dengan Nama / No HP + Password Plaintext)
+// ============================================================
+
+/**
+ * REGISTER — Buat akun baru (Warga)
+ * Payload: { nama, no_hp, blok_rumah, merk_kendaraan, plat_nomor, password }
+ */
+function registerUser(payload) {
+  const { nama, no_hp, blok_rumah, merk_kendaraan, plat_nomor, password } = payload;
+
+  if (!nama || !no_hp || !blok_rumah || !merk_kendaraan || !plat_nomor || !password) {
+    return { success: false, message: 'Semua field wajib diisi.' };
+  }
+
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(SHEET.USERS);
+  const data = _getSheetData(sheet);
+
+  // Cek duplikasi — nama, no_hp, blok, plat_nomor harus unik
+  for (const row of data) {
+    if (row.nama && row.nama.toString().toLowerCase() === nama.toLowerCase()) {
+      return { success: false, message: 'Nama sudah terdaftar. Hubungi admin jika ini milik Anda.' };
+    }
+    if (row.no_hp && row.no_hp.toString() === no_hp.toString()) {
+      return { success: false, message: 'Nomor HP sudah terdaftar. Hubungi admin jika ini milik Anda.' };
+    }
+    if (row.blok_rumah && row.blok_rumah.toString().toLowerCase() === blok_rumah.toLowerCase()) {
+      return { success: false, message: 'Blok rumah sudah terdaftar. Hubungi admin jika ini milik Anda.' };
+    }
+    if (row.plat_nomor && row.plat_nomor.toString().toLowerCase() === plat_nomor.toLowerCase()) {
+      return { success: false, message: 'Plat nomor sudah terdaftar. Hubungi admin jika ini milik Anda.' };
+    }
+  }
+
+  const userId = 'USR-' + Utilities.getUuid().substring(0, 8).toUpperCase();
+
+  sheet.appendRow([
+    userId,
+    nama,
+    no_hp,
+    blok_rumah,
+    merk_kendaraan,
+    plat_nomor,
+    password,          // Plaintext — tanpa hashing
+    'Warga',           // Role default
+    _formatDate(new Date())
+  ]);
+
+  return {
+    success: true,
+    message: 'Registrasi berhasil!',
+    data: {
+      id: userId,
+      nama: nama,
+      no_hp: no_hp,
+      blok_rumah: blok_rumah,
+      merk_kendaraan: merk_kendaraan,
+      plat_nomor: plat_nomor,
+      role: 'Warga'
+    }
+  };
+}
+
+/**
+ * LOGIN — Warga/Admin login dengan (Nama ATAU No HP) + Password
+ * Payload: { identifier, password }
+ * identifier bisa berupa Nama atau Nomor HP
+ */
+function loginUser(payload) {
+  const { identifier, password } = payload;
+
+  if (!identifier || !password) {
+    return { success: false, message: 'Nama/No HP dan Password wajib diisi.' };
+  }
+
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(SHEET.USERS);
+  const data = _getSheetData(sheet);
+
+  const identifierStr = identifier.toString().trim().toLowerCase();
+
+  const user = data.find(row => {
+    const matchNama = row.nama && row.nama.toString().trim().toLowerCase() === identifierStr;
+    const matchHP = row.no_hp && row.no_hp.toString().trim() === identifier.toString().trim();
+    return matchNama || matchHP;
+  });
+
+  if (!user) {
+    return { success: false, message: 'Akun tidak ditemukan. Periksa kembali Nama atau Nomor HP Anda.' };
+  }
+
+  // Verifikasi password plaintext
+  if (user.password.toString() !== password.toString()) {
+    return { success: false, message: 'Password salah.' };
+  }
+
+  return {
+    success: true,
+    message: 'Login berhasil!',
+    data: {
+      id: user.id,
+      nama: user.nama,
+      no_hp: user.no_hp,
+      blok_rumah: user.blok_rumah,
+      merk_kendaraan: user.merk_kendaraan,
+      plat_nomor: user.plat_nomor,
+      role: user.role
+    }
+  };
+}
+
+// ============================================================
+// 🅿️ PARKIR — Ketersediaan & Spots
+// ============================================================
+
+function getAvailability() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(SHEET.PARKING_SPOTS);
+  const data = _getSheetData(sheet);
+
+  const premium = data.filter(r => r.type === 'Premium');
+  const regular = data.filter(r => r.type === 'Regular');
+
+  return {
+    success: true,
+    data: {
+      premium: {
+        total: premium.length,
+        available: premium.filter(r => r.status === 'Available').length,
+        price: 150000
+      },
+      regular: {
+        total: regular.length,
+        available: regular.filter(r => r.status === 'Available').length,
+        price: 50000
+      }
+    }
+  };
+}
+
+function getParkingSpots(type) {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(SHEET.PARKING_SPOTS);
+  const data = _getSheetData(sheet);
+
+  let spots = data;
+  if (type) {
+    spots = data.filter(r => r.type === type);
+  }
+
+  return { success: true, data: spots };
+}
+
+// ============================================================
+// 📝 BOOKING — Proses Penyewaan Baru
+// ============================================================
+
+/**
+ * CREATE BOOKING
+ * Payload: {
+ *   user_id, spots: [{ spot_id, plat_nomor, merk_kendaraan }],
+ *   bulan_sewa, bukti_transfer_base64, bukti_filename
+ * }
+ * Maksimal 4 spot dalam 1 transaksi
+ */
+function createBooking(payload) {
+  const { user_id, spots, bulan_sewa, bukti_transfer_base64, bukti_filename } = payload;
+
+  if (!user_id || !spots || !bulan_sewa || !bukti_transfer_base64) {
+    return { success: false, message: 'Data booking tidak lengkap.' };
+  }
+
+  if (!Array.isArray(spots) || spots.length === 0 || spots.length > 4) {
+    return { success: false, message: 'Pilih minimal 1 dan maksimal 4 lahan parkir.' };
+  }
+
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const parkingSheet = ss.getSheetByName(SHEET.PARKING_SPOTS);
+  const trxSheet = ss.getSheetByName(SHEET.TRANSACTIONS);
+  const settingsSheet = ss.getSheetByName(SHEET.APP_SETTINGS);
+  const parkingData = _getSheetData(parkingSheet);
+
+  // Validasi semua spot tersedia
+  for (const spot of spots) {
+    const found = parkingData.find(r => r.spot_id === spot.spot_id);
+    if (!found) {
+      return { success: false, message: `Spot ${spot.spot_id} tidak ditemukan.` };
+    }
+    if (found.status !== 'Available') {
+      return { success: false, message: `Spot ${spot.spot_id} sudah terisi.` };
+    }
+  }
+
+  // Hitung total biaya dengan diskon
+  const discount = _getDiscount(settingsSheet, bulan_sewa);
+  let totalBayar = 0;
+
+  for (const spot of spots) {
+    const spotData = parkingData.find(r => r.spot_id === spot.spot_id);
+    totalBayar += Number(spotData.price) * Number(bulan_sewa);
+  }
+
+  const discountAmount = discount.type === 'persen'
+    ? totalBayar * (discount.value / 100)
+    : discount.value;
+  const finalTotal = Math.max(0, totalBayar - discountAmount);
+
+  // Upload bukti transfer ke Google Drive
+  const buktiUrl = _uploadToDrive(bukti_transfer_base64, bukti_filename || 'bukti_transfer.jpg');
+
+  // Simpan transaksi per-spot
+  const trxIds = [];
+  const now = new Date();
+  const startDate = now;
+  const endDate = new Date(now);
+  endDate.setMonth(endDate.getMonth() + Number(bulan_sewa));
+
+  for (const spot of spots) {
+    const trxId = 'TRX-' + Utilities.getUuid().substring(0, 8).toUpperCase();
+    const spotData = parkingData.find(r => r.spot_id === spot.spot_id);
+    const spotPrice = Number(spotData.price) * Number(bulan_sewa);
+
+    trxSheet.appendRow([
+      trxId,
+      user_id,
+      spot.spot_id,
+      spot.plat_nomor,
+      spot.merk_kendaraan,
+      Number(bulan_sewa),
+      spotPrice,
+      discount.value > 0 ? Math.round(discountAmount / spots.length) : 0,
+      Math.round(finalTotal / spots.length),
+      buktiUrl,
+      'Pending',
+      _formatDate(startDate),
+      _formatDate(endDate),
+      _formatDate(now)
+    ]);
+
+    // Update status spot menjadi Booked
+    _updateSpotStatus(parkingSheet, parkingData, spot.spot_id, 'Booked');
+    trxIds.push(trxId);
+  }
+
+  return {
+    success: true,
+    message: 'Booking berhasil! Menunggu verifikasi admin.',
+    data: {
+      trx_ids: trxIds,
+      total_sebelum_diskon: totalBayar,
+      diskon: discountAmount,
+      total_bayar: finalTotal,
+      start_date: _formatDate(startDate),
+      end_date: _formatDate(endDate),
+      bukti_url: buktiUrl
+    }
+  };
+}
+
+// ============================================================
+// 🔄 PERPANJANGAN SEWA
+// ============================================================
+
+/**
+ * EXTEND BOOKING
+ * Payload: { trx_id, bulan_tambah, bukti_transfer_base64, bukti_filename }
+ */
+function extendBooking(payload) {
+  const { trx_id, bulan_tambah, bukti_transfer_base64, bukti_filename } = payload;
+
+  if (!trx_id || !bulan_tambah || !bukti_transfer_base64) {
+    return { success: false, message: 'Data perpanjangan tidak lengkap.' };
+  }
+
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const trxSheet = ss.getSheetByName(SHEET.TRANSACTIONS);
+  const parkingSheet = ss.getSheetByName(SHEET.PARKING_SPOTS);
+  const settingsSheet = ss.getSheetByName(SHEET.APP_SETTINGS);
+  const trxData = _getSheetData(trxSheet);
+  const parkingData = _getSheetData(parkingSheet);
+
+  const trxIndex = trxData.findIndex(r => r.trx_id === trx_id);
+  if (trxIndex === -1) {
+    return { success: false, message: 'Transaksi tidak ditemukan.' };
+  }
+
+  const trx = trxData[trxIndex];
+  if (trx.status !== 'Active') {
+    return { success: false, message: 'Hanya transaksi aktif yang bisa diperpanjang.' };
+  }
+
+  const spotData = parkingData.find(r => r.spot_id === trx.spot_id);
+  if (!spotData) {
+    return { success: false, message: 'Data spot parkir tidak ditemukan.' };
+  }
+
+  const discount = _getDiscount(settingsSheet, bulan_tambah);
+  const rawTotal = Number(spotData.price) * Number(bulan_tambah);
+  const discountAmount = discount.type === 'persen'
+    ? rawTotal * (discount.value / 100)
+    : discount.value;
+  const finalTotal = Math.max(0, rawTotal - discountAmount);
+
+  // Upload bukti
+  const buktiUrl = _uploadToDrive(bukti_transfer_base64, bukti_filename || 'bukti_perpanjangan.jpg');
+
+  // Buat transaksi perpanjangan baru (status Pending)
+  const newTrxId = 'TRX-' + Utilities.getUuid().substring(0, 8).toUpperCase();
+  const now = new Date();
+
+  // Hitung end_date baru dari end_date lama
+  const currentEndDate = new Date(trx.end_date);
+  const newEndDate = new Date(currentEndDate);
+  newEndDate.setMonth(newEndDate.getMonth() + Number(bulan_tambah));
+
+  trxSheet.appendRow([
+    newTrxId,
+    trx.user_id,
+    trx.spot_id,
+    trx.plat_nomor,
+    trx.merk_kendaraan,
+    Number(bulan_tambah),
+    rawTotal,
+    discountAmount,
+    finalTotal,
+    buktiUrl,
+    'Pending',
+    _formatDate(currentEndDate),
+    _formatDate(newEndDate),
+    _formatDate(now)
+  ]);
+
+  return {
+    success: true,
+    message: 'Perpanjangan diajukan! Menunggu verifikasi admin.',
+    data: {
+      new_trx_id: newTrxId,
+      original_trx_id: trx_id,
+      bulan_tambah: bulan_tambah,
+      total_bayar: finalTotal,
+      diskon: discountAmount,
+      new_end_date: _formatDate(newEndDate),
+      bukti_url: buktiUrl
+    }
+  };
+}
+
+// ============================================================
+// 👤 USER DASHBOARD
+// ============================================================
+
+function getUserDashboard(userId) {
+  if (!userId) return { success: false, message: 'user_id diperlukan.' };
+
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const trxSheet = ss.getSheetByName(SHEET.TRANSACTIONS);
+  const userSheet = ss.getSheetByName(SHEET.USERS);
+  const trxData = _getSheetData(trxSheet);
+  const userData = _getSheetData(userSheet);
+
+  const user = userData.find(r => r.id === userId);
+  if (!user) return { success: false, message: 'User tidak ditemukan.' };
+
+  const now = new Date();
+  const activeRentals = trxData
+    .filter(r => r.user_id === userId && r.status === 'Active')
+    .map(r => {
+      const endDate = new Date(r.end_date);
+      const startDate = new Date(r.start_date);
+      const totalDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+      const remainingDays = Math.max(0, Math.ceil((endDate - now) / (1000 * 60 * 60 * 24)));
+      const progressPercent = totalDays > 0 ? Math.round(((totalDays - remainingDays) / totalDays) * 100) : 100;
+
+      return {
+        trx_id: r.trx_id,
+        spot_id: r.spot_id,
+        plat_nomor: r.plat_nomor,
+        merk_kendaraan: r.merk_kendaraan,
+        bulan_sewa: r.bulan_sewa,
+        start_date: r.start_date,
+        end_date: r.end_date,
+        remaining_days: remainingDays,
+        progress_percent: progressPercent,
+        is_expiring_soon: remainingDays <= 7
+      };
+    });
+
+  return {
+    success: true,
+    data: {
+      user: {
+        id: user.id,
+        nama: user.nama,
+        no_hp: user.no_hp,
+        blok_rumah: user.blok_rumah,
+        merk_kendaraan: user.merk_kendaraan,
+        plat_nomor: user.plat_nomor,
+        role: user.role
+      },
+      active_rentals: activeRentals
+    }
+  };
+}
+
+function getTransactionHistory(userId) {
+  if (!userId) return { success: false, message: 'user_id diperlukan.' };
+
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(SHEET.TRANSACTIONS);
+  const data = _getSheetData(sheet);
+
+  const history = data
+    .filter(r => r.user_id === userId)
+    .map(r => ({
+      trx_id: r.trx_id,
+      spot_id: r.spot_id,
+      bulan_sewa: r.bulan_sewa,
+      total_bayar: r.total_final,
+      status: r.status,
+      created_at: r.created_at,
+      start_date: r.start_date,
+      end_date: r.end_date
+    }))
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+  return { success: true, data: history };
+}
+
+// ============================================================
+// ✅ ADMIN — Verifikasi & Reject Transaksi
+// ============================================================
+
+function getPendingTransactions() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(SHEET.TRANSACTIONS);
+  const data = _getSheetData(sheet);
+
+  const pending = data.filter(r => r.status === 'Pending');
+  return { success: true, data: pending };
+}
+
+/**
+ * VERIFY TRANSACTION
+ * Payload: { trx_id }
+ */
+function verifyTransaction(payload) {
+  const { trx_id } = payload;
+  if (!trx_id) return { success: false, message: 'trx_id diperlukan.' };
+
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(SHEET.TRANSACTIONS);
+  const data = _getSheetData(sheet);
+
+  const rowIndex = data.findIndex(r => r.trx_id === trx_id);
+  if (rowIndex === -1) return { success: false, message: 'Transaksi tidak ditemukan.' };
+
+  // Column index untuk 'status' (kolom ke-11 = index K)
+  const statusCol = 11;
+  sheet.getRange(rowIndex + 2, statusCol).setValue('Active');
+
+  return { success: true, message: `Transaksi ${trx_id} berhasil diverifikasi.` };
+}
+
+/**
+ * REJECT TRANSACTION — Menolak dan mengembalikan spot
+ * Payload: { trx_id }
+ */
+function rejectTransaction(payload) {
+  const { trx_id } = payload;
+  if (!trx_id) return { success: false, message: 'trx_id diperlukan.' };
+
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const trxSheet = ss.getSheetByName(SHEET.TRANSACTIONS);
+  const parkingSheet = ss.getSheetByName(SHEET.PARKING_SPOTS);
+  const trxData = _getSheetData(trxSheet);
+  const parkingData = _getSheetData(parkingSheet);
+
+  const rowIndex = trxData.findIndex(r => r.trx_id === trx_id);
+  if (rowIndex === -1) return { success: false, message: 'Transaksi tidak ditemukan.' };
+
+  const trx = trxData[rowIndex];
+
+  // Set status ke Rejected
+  const statusCol = 11;
+  trxSheet.getRange(rowIndex + 2, statusCol).setValue('Rejected');
+
+  // Kembalikan spot ke Available
+  _updateSpotStatus(parkingSheet, parkingData, trx.spot_id, 'Available');
+
+  return { success: true, message: `Transaksi ${trx_id} ditolak. Spot ${trx.spot_id} dikembalikan.` };
+}
+
+// ============================================================
+// 💰 MODUL INVESTOR RETURNS
+// ============================================================
+
+function getInvestorReturns() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(SHEET.INVESTOR_RETURNS);
+  const data = _getSheetData(sheet);
+
+  const TARGET_INVESTASI = 41300000;
+  const totalDibayar = data.reduce((sum, r) => sum + Number(r.nominal_dibayar || 0), 0);
+
+  return {
+    success: true,
+    data: {
+      target: TARGET_INVESTASI,
+      total_dibayar: totalDibayar,
+      sisa: TARGET_INVESTASI - totalDibayar,
+      progress_percent: Math.round((totalDibayar / TARGET_INVESTASI) * 100),
+      records: data
+    }
+  };
+}
+
+/**
+ * ADD INVESTOR RETURN
+ * Payload: { tanggal_bayar, nominal_dibayar, bukti_transfer_base64, bukti_filename }
+ */
+function addInvestorReturn(payload) {
+  const { tanggal_bayar, nominal_dibayar, bukti_transfer_base64, bukti_filename } = payload;
+
+  if (!tanggal_bayar || !nominal_dibayar || !bukti_transfer_base64) {
+    return { success: false, message: 'Data cicilan investor tidak lengkap.' };
+  }
+
+  const buktiUrl = _uploadToDrive(bukti_transfer_base64, bukti_filename || 'bukti_investor.jpg');
+  const returnId = 'INV-' + Utilities.getUuid().substring(0, 8).toUpperCase();
+
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(SHEET.INVESTOR_RETURNS);
+
+  sheet.appendRow([
+    returnId,
+    tanggal_bayar,
+    Number(nominal_dibayar),
+    buktiUrl,
+    _formatDate(new Date())
+  ]);
+
+  return {
+    success: true,
+    message: 'Cicilan investor berhasil dicatat.',
+    data: { return_id: returnId, bukti_url: buktiUrl }
+  };
+}
+
+// ============================================================
+// 📊 TRANSPARANSI KEUANGAN (Publik)
+// ============================================================
+
+function getFinancialReport(startMonth, endMonth) {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const trxSheet = ss.getSheetByName(SHEET.TRANSACTIONS);
+  const investorSheet = ss.getSheetByName(SHEET.INVESTOR_RETURNS);
+  const trxData = _getSheetData(trxSheet);
+  const investorData = _getSheetData(investorSheet);
+
+  // Filter transaksi Active berdasarkan rentang bulan
+  let filteredTrx = trxData.filter(r => r.status === 'Active');
+  let filteredInv = investorData;
+
+  if (startMonth && endMonth) {
+    const start = new Date(startMonth + '-01');
+    const end = new Date(endMonth + '-28');
+    end.setMonth(end.getMonth() + 1);
+
+    filteredTrx = filteredTrx.filter(r => {
+      const d = new Date(r.created_at);
+      return d >= start && d <= end;
+    });
+
+    filteredInv = investorData.filter(r => {
+      const d = new Date(r.tanggal_bayar);
+      return d >= start && d <= end;
+    });
+  }
+
+  const totalPemasukan = filteredTrx.reduce((sum, r) => sum + Number(r.total_final || 0), 0);
+  const totalPengeluaran = filteredInv.reduce((sum, r) => sum + Number(r.nominal_dibayar || 0), 0);
+
+  // Sembunyikan nomor HP warga di laporan publik
+  const pemasukanDetail = filteredTrx.map(r => ({
+    trx_id: r.trx_id,
+    spot_id: r.spot_id,
+    bulan_sewa: r.bulan_sewa,
+    total_bayar: r.total_final,
+    tanggal: r.created_at
+  }));
+
+  const pengeluaranDetail = filteredInv.map(r => ({
+    return_id: r.return_id,
+    tanggal: r.tanggal_bayar,
+    nominal: r.nominal_dibayar
+  }));
+
+  return {
+    success: true,
+    data: {
+      pemasukan: { total: totalPemasukan, detail: pemasukanDetail },
+      pengeluaran: { total: totalPengeluaran, detail: pengeluaranDetail },
+      saldo: totalPemasukan - totalPengeluaran
+    }
+  };
+}
+
+// ============================================================
+// ⚙️ APP SETTINGS (Dinamis)
+// ============================================================
+
+function getSettings() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(SHEET.APP_SETTINGS);
+  const data = _getSheetData(sheet);
+
+  const settings = {};
+  data.forEach(r => {
+    settings[r.key] = { value: r.value, description: r.description };
+  });
+
+  return { success: true, data: settings };
+}
+
+/**
+ * UPDATE SETTING (Admin)
+ * Payload: { key, value, description }
+ */
+function updateSetting(payload) {
+  const { key, value, description } = payload;
+  if (!key) return { success: false, message: 'Key setting diperlukan.' };
+
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(SHEET.APP_SETTINGS);
+  const data = _getSheetData(sheet);
+
+  const rowIndex = data.findIndex(r => r.key === key);
+  if (rowIndex >= 0) {
+    sheet.getRange(rowIndex + 2, 2).setValue(value);
+    if (description) sheet.getRange(rowIndex + 2, 3).setValue(description);
+  } else {
+    sheet.appendRow([key, value, description || '']);
+  }
+
+  return { success: true, message: `Setting "${key}" berhasil diperbarui.` };
+}
+
+// ============================================================
+// 📞 ADMIN CONTACTS
+// ============================================================
+
+function getAdminContacts() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(SHEET.ADMIN_CONTACTS);
+  const data = _getSheetData(sheet);
+  return { success: true, data: data };
+}
+
+/**
+ * UPDATE ADMIN CONTACT
+ * Payload: { blok, nama_admin, no_whatsapp }
+ */
+function updateAdminContact(payload) {
+  const { blok, nama_admin, no_whatsapp } = payload;
+  if (!blok) return { success: false, message: 'Blok diperlukan.' };
+
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(SHEET.ADMIN_CONTACTS);
+  const data = _getSheetData(sheet);
+
+  const rowIndex = data.findIndex(r => r.blok === blok);
+  if (rowIndex >= 0) {
+    if (nama_admin) sheet.getRange(rowIndex + 2, 2).setValue(nama_admin);
+    if (no_whatsapp) sheet.getRange(rowIndex + 2, 3).setValue(no_whatsapp);
+  } else {
+    sheet.appendRow([blok, nama_admin, no_whatsapp]);
+  }
+
+  return { success: true, message: `Kontak admin ${blok} berhasil diperbarui.` };
+}
+
+// ============================================================
+// 🔒 ADMIN — Reset Password (Manual)
+// ============================================================
+
+/**
+ * RESET PASSWORD (Admin only)
+ * Payload: { user_id, new_password }
+ */
+function resetPassword(payload) {
+  const { user_id, new_password } = payload;
+  if (!user_id || !new_password) {
+    return { success: false, message: 'user_id dan new_password diperlukan.' };
+  }
+
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(SHEET.USERS);
+  const data = _getSheetData(sheet);
+
+  const rowIndex = data.findIndex(r => r.id === user_id);
+  if (rowIndex === -1) return { success: false, message: 'User tidak ditemukan.' };
+
+  // Password column (kolom ke-7)
+  sheet.getRange(rowIndex + 2, 7).setValue(new_password);
+
+  return { success: true, message: `Password untuk ${data[rowIndex].nama} berhasil direset.` };
+}
+
+// ============================================================
+// ⭐ REVIEWS
+// ============================================================
+
+function getReviews() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(SHEET.REVIEWS);
+  const data = _getSheetData(sheet);
+
+  return {
+    success: true,
+    data: data.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+  };
+}
+
+/**
+ * ADD REVIEW
+ * Payload: { nama_user, rating (1-5), komentar }
+ */
+function addReview(payload) {
+  const { nama_user, rating, komentar } = payload;
+
+  if (!nama_user || !rating || !komentar) {
+    return { success: false, message: 'Nama, rating, dan komentar wajib diisi.' };
+  }
+
+  if (Number(rating) < 1 || Number(rating) > 5) {
+    return { success: false, message: 'Rating harus antara 1 sampai 5.' };
+  }
+
+  const reviewId = 'REV-' + Utilities.getUuid().substring(0, 8).toUpperCase();
+  const now = new Date();
+
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(SHEET.REVIEWS);
+
+  sheet.appendRow([reviewId, nama_user, Number(rating), komentar, _formatDate(now)]);
+
+  return { success: true, message: 'Ulasan berhasil ditambahkan!', data: { review_id: reviewId } };
+}
+
+// ============================================================
+// 👥 ADMIN — Get All Users
+// ============================================================
+
+function getAllUsers() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(SHEET.USERS);
+  const data = _getSheetData(sheet);
+
+  const users = data.map(r => ({
+    id: r.id,
+    nama: r.nama,
+    no_hp: r.no_hp,
+    blok_rumah: r.blok_rumah,
+    merk_kendaraan: r.merk_kendaraan,
+    plat_nomor: r.plat_nomor,
+    role: r.role
+  }));
+
+  return { success: true, data: users };
+}
+
+// ============================================================
+// 🔧 UTILITY / HELPER FUNCTIONS
+// ============================================================
+
+/**
+ * Mengambil semua data dari sheet sebagai array of objects
+ * Header row = baris pertama
+ */
+function _getSheetData(sheet) {
+  const data = sheet.getDataRange().getValues();
+  if (data.length <= 1) return [];
+
+  const headers = data[0].map(h => h.toString().trim().toLowerCase().replace(/\s+/g, '_'));
+  const rows = [];
+
+  for (let i = 1; i < data.length; i++) {
+    const row = {};
+    headers.forEach((header, j) => {
+      row[header] = data[i][j];
+    });
+    rows.push(row);
+  }
+
+  return rows;
+}
+
+/**
+ * Upload file Base64 ke Google Drive
+ */
+function _uploadToDrive(base64Data, filename) {
+  try {
+    // Handle data URI prefix
+    let cleanBase64 = base64Data;
+    let mimeType = 'image/jpeg';
+
+    if (base64Data.indexOf(',') > -1) {
+      const parts = base64Data.split(',');
+      // Deteksi MIME type dari data URI
+      const mimeMatch = parts[0].match(/data:(.*?);/);
+      if (mimeMatch) mimeType = mimeMatch[1];
+      cleanBase64 = parts[1];
+    }
+
+    const decoded = Utilities.base64Decode(cleanBase64);
+    const blob = Utilities.newBlob(decoded, mimeType, filename);
+
+    const folder = DriveApp.getFolderById(DRIVE_FOLDER_ID);
+    const file = folder.createFile(blob);
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+
+    return file.getUrl();
+  } catch (err) {
+    Logger.log('Upload error: ' + err.message);
+    return 'UPLOAD_FAILED';
+  }
+}
+
+/**
+ * Update status parking spot
+ */
+function _updateSpotStatus(sheet, data, spotId, newStatus) {
+  const rowIndex = data.findIndex(r => r.spot_id === spotId);
+  if (rowIndex >= 0) {
+    // Status = kolom ke-4 (D) pada PARKING_SPOTS
+    sheet.getRange(rowIndex + 2, 4).setValue(newStatus);
+  }
+}
+
+/**
+ * Ambil diskon berdasarkan durasi dari APP_SETTINGS
+ * Key format: DISKON_1, DISKON_3, DISKON_6, DISKON_12
+ * Value format: "10%" atau "50000"
+ */
+function _getDiscount(settingsSheet, bulanSewa) {
+  const data = _getSheetData(settingsSheet);
+  const key = 'DISKON_' + bulanSewa;
+  const setting = data.find(r => r.key === key);
+
+  if (!setting || !setting.value) {
+    return { type: 'nominal', value: 0 };
+  }
+
+  const val = setting.value.toString().trim();
+  if (val.endsWith('%')) {
+    return { type: 'persen', value: parseFloat(val.replace('%', '')) };
+  }
+
+  return { type: 'nominal', value: Number(val) };
+}
+
+/**
+ * Format Date ke string YYYY-MM-DD
+ */
+function _formatDate(date) {
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+// ============================================================
+// 🕐 AUTO EXPIRY — Time-Driven Trigger (Jalankan Harian)
+// ============================================================
+
+/**
+ * Fungsi ini harus di-set sebagai Time-Driven Trigger (harian)
+ * untuk otomatis mengubah status transaksi yang sudah lewat masa sewa
+ */
+function autoExpireTransactions() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const trxSheet = ss.getSheetByName(SHEET.TRANSACTIONS);
+  const parkingSheet = ss.getSheetByName(SHEET.PARKING_SPOTS);
+  const trxData = _getSheetData(trxSheet);
+  const parkingData = _getSheetData(parkingSheet);
+
+  const now = new Date();
+  let expiredCount = 0;
+
+  trxData.forEach((trx, index) => {
+    if (trx.status === 'Active') {
+      const endDate = new Date(trx.end_date);
+      if (now > endDate) {
+        // Set status ke Expired
+        trxSheet.getRange(index + 2, 11).setValue('Expired');
+        // Kembalikan spot ke Available
+        _updateSpotStatus(parkingSheet, parkingData, trx.spot_id, 'Available');
+        expiredCount++;
+      }
+    }
+  });
+
+  Logger.log(`Auto-expire selesai. ${expiredCount} transaksi diubah ke Expired.`);
+}
