@@ -1,6 +1,6 @@
 /**
  * App Module — Main Controller, Navigation, Init
- * Update: FAQ toggle, spot click modal, discount format %, auto-logout
+ * FIXED: navbar ID, WA URLs, discount format
  */
 const App = (() => {
   let _allSpots = [];
@@ -25,18 +25,20 @@ const App = (() => {
   }
 
   function bindEvents() {
-    // Navbar toggle
     document.getElementById('navToggle').addEventListener('click', () => {
       document.getElementById('navToggle').classList.toggle('active');
       document.getElementById('navMenu').classList.toggle('show');
     });
 
-    // Navbar scroll
+    // ✅ FIXED: Menggunakan querySelector('.navbar') atau getElementById('navbar')
+    // Sekarang HTML sudah ditambahkan id="navbar" pada <nav>
     window.addEventListener('scroll', () => {
-      document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 20);
+      const navbar = document.getElementById('navbar');
+      if (navbar) {
+        navbar.classList.toggle('scrolled', window.scrollY > 20);
+      }
     });
 
-    // Close dropdown on outside click
     document.addEventListener('click', (e) => {
       const dropdown = document.getElementById('userDropdown');
       if (dropdown && !e.target.closest('.nav-user-dropdown')) {
@@ -48,13 +50,11 @@ const App = (() => {
       }
     });
 
-    // Keyboard shortcut
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') closeModal();
     });
   }
 
-  // ── Navigation ──
   function navigate(page) {
     document.getElementById('navMenu').classList.remove('show');
     document.getElementById('navToggle').classList.remove('active');
@@ -73,7 +73,7 @@ const App = (() => {
       case 'availability': loadAvailability(); break;
       case 'financial': Financial.render(); break;
       case 'reviews': loadReviewsPage(); break;
-      case 'faq': /* konten statis, tidak perlu load data */ break;
+      case 'faq': break;
       case 'dashboard':
         if (!Auth.isLoggedIn()) { Auth.showLoginModal(); navigate('home'); return; }
         if (Auth.isAdmin()) { navigate('admin'); return; }
@@ -86,7 +86,6 @@ const App = (() => {
     }
   }
 
-  // ── Modal ──
   function openModal(html) {
     document.getElementById('modalBody').innerHTML = html;
     document.getElementById('modalOverlay').classList.add('show');
@@ -99,29 +98,21 @@ const App = (() => {
     document.body.style.overflow = '';
   }
 
-  // ── User Menu ──
   function toggleUserMenu() {
     document.getElementById('userDropdown').classList.toggle('show');
   }
 
-  // ── WhatsApp ──
   function toggleWA() {
     document.getElementById('waPopup').classList.toggle('show');
   }
 
-  // ── FAQ Accordion ──
   function toggleFaq(btnEl) {
     const item = btnEl.closest('.faq-item');
     const isOpen = item.classList.contains('open');
-
-    // Tutup semua item lain
     document.querySelectorAll('.faq-item.open').forEach(el => el.classList.remove('open'));
-
-    // Toggle item yang diklik
     if (!isOpen) item.classList.add('open');
   }
 
-  // ── Data Loaders ──
   async function loadHeroStats() {
     try {
       const res = await API.getAvailability();
@@ -143,7 +134,6 @@ const App = (() => {
         const key = `DISKON_${d}`;
         const raw = res.data[key]?.value;
         if (raw && raw !== '0') {
-          // Format ke persentase
           const formatted = _formatDiscountDisplay(raw);
           if (formatted) discounts.push({ months: d, label: formatted });
         }
@@ -165,24 +155,15 @@ const App = (() => {
     } catch { /* silent */ }
   }
 
-  /**
-   * Konversi nilai diskon dari DB ke format tampilan persentase
-   * Mendukung: "0.1" → "10%", "10" → "10%", "10%" → "10%"
-   */
   function _formatDiscountDisplay(raw) {
     const str = raw?.toString().trim() || '0';
     if (str === '0') return null;
-
-    if (str.endsWith('%')) return str; // Sudah format %
-
+    if (str.endsWith('%')) return str;
     const num = parseFloat(str);
     if (isNaN(num) || num === 0) return null;
-
     if (num > 0 && num < 1) {
-      // Desimal: 0.1 → 10%
       return `${Math.round(num * 100)}%`;
     } else {
-      // Integer/float: 10 → 10%
       return `${num}%`;
     }
   }
@@ -300,7 +281,6 @@ const App = (() => {
     }
   }
 
-  // ── Availability ──
   async function loadAvailability() {
     const summary = document.getElementById('availSummary');
     const grid = document.getElementById('spotsGrid');
@@ -363,16 +343,12 @@ const App = (() => {
     }).join('');
   }
 
-  /**
-   * Buka modal booking langsung dari klik spot di halaman ketersediaan
-   */
   function openBookingFromSpot(spotId, type) {
     if (!Auth.isLoggedIn()) {
       Utils.showToast('Silakan masuk terlebih dahulu untuk memesan slot.', 'warning');
       setTimeout(() => Auth.showLoginModal(), 500);
       return;
     }
-    // Tampilkan konfirmasi sebelum buka wizard
     const html = `
       <div style="text-align:center;padding:1rem 0">
         <div style="width:70px;height:70px;margin:0 auto 1rem;background:var(--primary-alpha);border-radius:50%;display:flex;align-items:center;justify-content:center">
@@ -420,6 +396,7 @@ const App = (() => {
     } catch { /* silent */ }
   }
 
+  // ✅ FIXED: URL WhatsApp menggunakan URL asli, bukan format markdown
   async function loadWAContacts() {
     try {
       const res = await API.getAdminContacts();
@@ -427,7 +404,7 @@ const App = (() => {
         const el = document.getElementById('waContacts');
         const waMsg = encodeURIComponent('Halo admin, saya ingin menanyakan informasi mengenai sewa parkir di Pradha Ciganitri.');
         el.innerHTML = res.data.map(c => `
-          <a href="[wa.me](https://wa.me/${c.no_whatsapp}?text=${waMsg})" target="_blank" class="wa-contact">
+          <a href="https://wa.me/${c.no_whatsapp}?text=${waMsg}" target="_blank" class="wa-contact">
             <div class="wa-contact-avatar">${Utils.getInitials(c.nama_admin)}</div>
             <div class="wa-contact-info">
               <h5>${c.nama_admin}</h5>
@@ -452,5 +429,4 @@ const App = (() => {
   };
 })();
 
-// ── Bootstrap ──
 document.addEventListener('DOMContentLoaded', App.init);
