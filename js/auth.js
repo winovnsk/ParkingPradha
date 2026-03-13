@@ -6,7 +6,6 @@ const Auth = (() => {
   const SESSION_KEY = 'pradha_user';
   const REMEMBER_KEY = 'pradha_remember';
 
-  // ── Session ──
   function getUser() {
     try {
       const data = localStorage.getItem(SESSION_KEY);
@@ -31,7 +30,6 @@ const Auth = (() => {
     return u && u.role === 'Admin';
   }
 
-  // ── UI Update ──
   function updateUI() {
     const user = getUser();
     const loginBtn = document.getElementById('nav-login-btn');
@@ -51,7 +49,6 @@ const Auth = (() => {
     }
   }
 
-  // ── Password Visibility Toggle ──
   function togglePassword(inputId, btnEl) {
     const input = document.getElementById(inputId);
     if (!input) return;
@@ -63,9 +60,7 @@ const Auth = (() => {
     }
   }
 
-  // ── Login Modal ──
   function showLoginModal() {
-    // Cek remember me
     const remembered = localStorage.getItem(REMEMBER_KEY);
     let savedIdentifier = '';
     try {
@@ -136,7 +131,6 @@ const Auth = (() => {
       return;
     }
 
-    // Simpan atau hapus remember me
     if (rememberMe) {
       localStorage.setItem(REMEMBER_KEY, JSON.stringify({ identifier }));
     } else {
@@ -150,7 +144,7 @@ const Auth = (() => {
         setUser(res.data);
         App.closeModal();
         Utils.showToast(`Selamat datang, ${res.data.nama}!`, 'success');
-        AutoLogout.reset(); // Mulai timer auto-logout
+        AutoLogout.reset();
         if (res.data.role === 'Admin') {
           App.navigate('admin');
         } else {
@@ -166,7 +160,6 @@ const Auth = (() => {
     }
   }
 
-  // ── Register ──
   function showRegisterForm() {
     const html = `
       <div class="auth-modal">
@@ -273,19 +266,16 @@ const Auth = (() => {
     }
   }
 
-  // ── Forgot Password ──
+  // ✅ FIXED: Syntax error pada encodeURIComponent dan URL format
   function showForgotPassword() {
     App.closeModal();
     Utils.showToast('Anda akan diarahkan ke WhatsApp Admin untuk reset password.', 'info');
     setTimeout(() => {
-      window.open(
-        `[wa.me](https://wa.me/6281320912117?text=${encodeURIComponent()'Halo admin, saya ingin mereset password akun saya di Pradha Ciganitri Parking System.')}`,
-        '_blank'
-      );
+      const message = encodeURIComponent('Halo admin, saya ingin mereset password akun saya di Pradha Ciganitri Parking System.');
+      window.open(`https://wa.me/6281320912117?text=${message}`, '_blank');
     }, 1000);
   }
 
-  // ── Logout ──
   function logout() {
     AutoLogout.stop();
     clearUser();
