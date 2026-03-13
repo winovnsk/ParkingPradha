@@ -105,6 +105,57 @@ const Utils = (() => {
     });
   }
 
+  function readFileAsDataURL(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function sanitizeFilename(filename = '') {
+    return filename
+      .toString()
+      .replace(/[\\/:*?"<>|]+/g, '_')
+      .replace(/\s+/g, '_')
+      .trim();
+  }
+
+  /**
+   * Siapkan file upload agar konsisten untuk backend Apps Script.
+   * - Gambar: coba dikompres, fallback ke file original bila gagal diproses canvas.
+   * - PDF: kirim apa adanya sebagai Data URL.
+   */
+  async function prepareUploadFile(file) {
+    if (!file) throw new Error('File tidak ditemukan.');
+
+    const safeFilename = sanitizeFilename(file.name || `upload_${Date.now()}`);
+    const isPdf = file.type === 'application/pdf' || safeFilename.toLowerCase().endsWith('.pdf');
+
+    if (isPdf) {
+      return {
+        filename: safeFilename,
+        base64: await readFileAsDataURL(file),
+        mimeType: 'application/pdf'
+      };
+    }
+
+    try {
+      return {
+        filename: safeFilename,
+        base64: await compressImage(file),
+        mimeType: 'image/jpeg'
+      };
+    } catch {
+      return {
+        filename: safeFilename,
+        base64: await readFileAsDataURL(file),
+        mimeType: file.type || 'application/octet-stream'
+      };
+    }
+  }
+
   function setLoading(btn, loading) {
     if (loading) {
       btn.dataset.originalText = btn.innerHTML;
@@ -162,7 +213,8 @@ const Utils = (() => {
   return {
     formatCurrency, formatDate, formatShortDate,
     getInitials, renderStars, showToast,
-    compressImage, setLoading, getMonthOptions,
+    compressImage, readFileAsDataURL, sanitizeFilename, prepareUploadFile,
+    setLoading, getMonthOptions,
     parseDiscountValue
   };
 })();
