@@ -35,6 +35,21 @@ const Utils = (() => {
     return html;
   }
 
+  function formatDiscountPercent(value) {
+    const raw = value?.toString().trim() || '0';
+    if (!raw || raw === '0') return '0%';
+
+    if (raw.endsWith('%')) {
+      const pct = parseFloat(raw.replace('%', ''));
+      return Number.isFinite(pct) ? `${pct}%` : '0%';
+    }
+
+    const numeric = parseFloat(raw);
+    if (!Number.isFinite(numeric) || numeric <= 0) return '0%';
+    if (numeric < 1) return `${Math.round(numeric * 100)}%`;
+    return `${numeric}%`;
+  }
+
   function showToast(message, type = 'success') {
     const container = document.getElementById('toastContainer');
     const icons = {
@@ -130,7 +145,7 @@ const Utils = (() => {
 
   return {
     formatCurrency, formatDate, formatShortDate,
-    getInitials, renderStars, showToast,
+    getInitials, renderStars, formatDiscountPercent, showToast,
     compressImage, setLoading, getMonthOptions
   };
 })();

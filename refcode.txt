@@ -228,9 +228,9 @@ function seedDummyData() {
       ['BANK_QRIS_URL', 'https://drive.google.com/dummy-qris', 'Link Gambar QRIS'],
       // Diskon per Durasi
       ['DISKON_1', '0', 'Diskon untuk sewa 1 bulan (0 = tidak ada)'],
-      ['DISKON_3', '5%', 'Diskon 5% untuk sewa 3 bulan'],
-      ['DISKON_6', '10%', 'Diskon 10% untuk sewa 6 bulan'],
-      ['DISKON_12', '15%', 'Diskon 15% untuk sewa 12 bulan'],
+      ['DISKON_3', '2%', 'Diskon 2% untuk sewa 3 bulan'],
+      ['DISKON_6', '5%', 'Diskon 5% untuk sewa 6 bulan'],
+      ['DISKON_12', '10%', 'Diskon 10% untuk sewa 12 bulan'],
       // Kontak CS
       ['CS_WHATSAPP_PRIMARY', '6281320912117', 'Nomor WA CS Utama (Blok A)'],
       ['CS_WHATSAPP_SECONDARY', '628568999001', 'Nomor WA CS Cadangan (Blok B)'],
@@ -717,7 +717,12 @@ function createBooking(payload) {
   const finalTotal = Math.max(0, totalBayar - discountAmount);
 
   // Upload bukti transfer ke Google Drive
-  const buktiUrl = _uploadToDrive(bukti_transfer_base64, bukti_filename || 'bukti_transfer.jpg');
+  let buktiUrl = '';
+  try {
+    buktiUrl = _uploadToDrive(bukti_transfer_base64, bukti_filename || 'bukti_transfer.jpg');
+  } catch (err) {
+    return { success: false, message: 'Gagal mengunggah bukti transfer. Silakan coba lagi.' };
+  }
 
   // Simpan transaksi per-spot
   const trxIds = [];
@@ -813,7 +818,12 @@ function extendBooking(payload) {
   const finalTotal = Math.max(0, rawTotal - discountAmount);
 
   // Upload bukti
-  const buktiUrl = _uploadToDrive(bukti_transfer_base64, bukti_filename || 'bukti_perpanjangan.jpg');
+  let buktiUrl = '';
+  try {
+    buktiUrl = _uploadToDrive(bukti_transfer_base64, bukti_filename || 'bukti_perpanjangan.jpg');
+  } catch (err) {
+    return { success: false, message: 'Gagal mengunggah bukti transfer. Silakan coba lagi.' };
+  }
 
   // Buat transaksi perpanjangan baru (status Pending)
   const newTrxId = 'TRX-' + Utilities.getUuid().substring(0, 8).toUpperCase();
@@ -1036,7 +1046,12 @@ function addInvestorReturn(payload) {
     return { success: false, message: 'Data cicilan investor tidak lengkap.' };
   }
 
-  const buktiUrl = _uploadToDrive(bukti_transfer_base64, bukti_filename || 'bukti_investor.jpg');
+  let buktiUrl = '';
+  try {
+    buktiUrl = _uploadToDrive(bukti_transfer_base64, bukti_filename || 'bukti_investor.jpg');
+  } catch (err) {
+    return { success: false, message: 'Gagal mengunggah bukti transfer investor. Silakan coba lagi.' };
+  }
   const returnId = 'INV-' + Utilities.getUuid().substring(0, 8).toUpperCase();
 
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
@@ -1330,10 +1345,10 @@ function _uploadToDrive(base64Data, filename) {
     const file = folder.createFile(blob);
     file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
 
-    return file.getUrl();
+    return `https://drive.google.com/file/d/${file.getId()}/view?usp=drivesdk`;
   } catch (err) {
     Logger.log('Upload error: ' + err.message);
-    return 'UPLOAD_FAILED';
+    throw new Error('UPLOAD_FAILED');
   }
 }
 

@@ -243,13 +243,16 @@ const Booking = (() => {
       if (state.settings['BANK_BRI_NO']) banks.push({ name: 'BRI', no: state.settings['BANK_BRI_NO'].value, holder: state.settings['BANK_BRI_NAME']?.value || '' });
       if (state.settings['BANK_DANA_NO']) banks.push({ name: 'DANA', no: state.settings['BANK_DANA_NO'].value, holder: state.settings['BANK_DANA_NAME']?.value || '' });
 
-      bankHtml = banks.map(b => `
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:0.6rem;background:var(--bg-secondary);border-radius:var(--radius);margin-bottom:0.5rem">
+      bankHtml = banks.map((b, i) => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:0.6rem;background:var(--bg-secondary);border-radius:var(--radius);margin-bottom:0.5rem;gap:0.75rem">
           <div>
             <strong style="font-size:0.85rem">${b.name}</strong>
             <p style="font-size:0.8rem;color:var(--text-secondary)">${b.holder}</p>
+            <code id="bankNo-${i}" style="font-size:0.9rem;font-weight:700">${b.no}</code>
           </div>
-          <code style="font-size:0.9rem;font-weight:700">${b.no}</code>
+          <button class="btn btn-outline btn-sm" onclick="Booking.copyAccountNumber('${b.no}')">
+            <i class="fas fa-copy"></i> Salin Nomor Rekening
+          </button>
         </div>
       `).join('');
     } catch { /* fallback */ }
@@ -384,6 +387,28 @@ const Booking = (() => {
     `;
   }
 
+
+  async function copyAccountNumber(accountNumber) {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(accountNumber);
+      } else {
+        const tempInput = document.createElement('textarea');
+        tempInput.value = accountNumber;
+        tempInput.style.position = 'fixed';
+        tempInput.style.opacity = '0';
+        document.body.appendChild(tempInput);
+        tempInput.focus();
+        tempInput.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempInput);
+      }
+      Utils.showToast('Nomor rekening berhasil disalin.', 'success');
+    } catch (err) {
+      Utils.showToast('Gagal menyalin nomor rekening.', 'error');
+    }
+  }
+
   function nextStep() {
     if (state.step < 5) {
       state.step++;
@@ -400,7 +425,7 @@ const Booking = (() => {
 
   return {
     start, renderWizard, selectType, toggleSpot,
-    setDuration, handleFile, submit,
+    setDuration, handleFile, submit, copyAccountNumber,
     nextStep, prevStep
   };
 })();

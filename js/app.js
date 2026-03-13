@@ -20,6 +20,9 @@ const App = (() => {
     // Bind events
     bindEvents();
 
+    // Session security
+    if (window.AutoLogout) AutoLogout.init();
+
     // Hide loader
     setTimeout(() => {
       document.getElementById('app-loader').classList.add('hide');
@@ -142,9 +145,10 @@ const App = (() => {
       });
 
       if (discounts.length > 0) {
-        const chips = discounts.map(d =>
-          `<div class="discount-chip"><i class="fas fa-tag"></i> ${d.months} Bulan: Diskon ${d.value}</div>`
-        ).join('');
+        const chips = discounts.map(d => {
+          const discountDisplay = Utils.formatDiscountPercent(d.value);
+          return `<div class="discount-chip"><i class="fas fa-tag"></i> ${d.months} Bulan: Diskon ${discountDisplay}</div>`;
+        }).join('');
 
         document.getElementById('discountBanner').innerHTML = `
           <h3 style="font-size:1.1rem;font-weight:700;margin-bottom:0.25rem"><i class="fas fa-gift" style="color:var(--warning)"></i> Promo Diskon Langganan!</h3>
