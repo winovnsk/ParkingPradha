@@ -124,18 +124,18 @@ const Utils = (() => {
 
   /**
    * Siapkan file upload agar konsisten untuk backend Apps Script.
-   * Hanya izinkan PDF/JPG/PNG/WEBP untuk mencegah mime aneh yang gagal di Drive.
+   * Menggabungkan: validasi format + fallback aman jika kompresi gagal.
    */
   async function prepareUploadFile(file) {
     if (!file) throw new Error('File tidak ditemukan.');
 
-    const rawFilename = sanitizeFilename(file.name || `upload_${Date.now()}`);
+    const safeFilename = sanitizeFilename(file.name || `upload_${Date.now()}`);
     const fileType = (file.type || '').toLowerCase();
-    const lowerFilename = rawFilename.toLowerCase();
+    const lowerFilename = safeFilename.toLowerCase();
 
     const isPdf = fileType === 'application/pdf' || lowerFilename.endsWith('.pdf');
     if (isPdf) {
-      const filename = lowerFilename.endsWith('.pdf') ? rawFilename : `${rawFilename}.pdf`;
+      const filename = lowerFilename.endsWith('.pdf') ? safeFilename : `${safeFilename}.pdf`;
       return {
         filename,
         base64: await readFileAsDataURL(file),
@@ -150,14 +150,27 @@ const Utils = (() => {
       throw new Error('Format file tidak didukung. Gunakan JPG, PNG, WEBP, atau PDF.');
     }
 
+    const jpgFilename = lowerFilename.endsWith('.jpg') || lowerFilename.endsWith('.jpeg')
+      ? safeFilename
+      : `${safeFilename}.jpg`;
+
     try {
       return {
-        filename: lowerFilename.endsWith('.jpg') || lowerFilename.endsWith('.jpeg') ? rawFilename : `${rawFilename}.jpg`,
+        filename: jpgFilename,
         base64: await compressImage(file),
         mimeType: 'image/jpeg'
       };
     } catch {
-      throw new Error('Gagal memproses gambar. Coba ubah ke JPG/PNG lalu upload ulang.');
+      // Fallback: tetap kirim file asli (hanya untuk format yang sudah tervalidasi).
+      const originalExtFilename = /\.(jpe?g|png|webp)$/i.test(lowerFilename)
+        ? safeFilename
+        : `${safeFilename}.jpg`;
+
+      return {
+        filename: originalExtFilename,
+        base64: await readFileAsDataURL(file),
+        mimeType: fileType || 'image/jpeg'
+      };
     }
   }
 
