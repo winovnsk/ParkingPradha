@@ -125,6 +125,8 @@ const Utils = (() => {
   /**
    * Siapkan file upload agar konsisten untuk backend Apps Script.
    * Menggabungkan: validasi format + fallback aman jika kompresi gagal.
+   * - Gambar: coba dikompres, fallback ke file original bila gagal diproses canvas.
+   * - PDF: kirim apa adanya sebagai Data URL.
    */
   async function prepareUploadFile(file) {
     if (!file) throw new Error('File tidak ditemukan.');
@@ -138,6 +140,11 @@ const Utils = (() => {
       const filename = lowerFilename.endsWith('.pdf') ? safeFilename : `${safeFilename}.pdf`;
       return {
         filename,
+    const isPdf = file.type === 'application/pdf' || safeFilename.toLowerCase().endsWith('.pdf');
+
+    if (isPdf) {
+      return {
+        filename: safeFilename,
         base64: await readFileAsDataURL(file),
         mimeType: 'application/pdf'
       };
@@ -157,6 +164,9 @@ const Utils = (() => {
     try {
       return {
         filename: jpgFilename,
+    try {
+      return {
+        filename: safeFilename,
         base64: await compressImage(file),
         mimeType: 'image/jpeg'
       };
@@ -170,6 +180,10 @@ const Utils = (() => {
         filename: originalExtFilename,
         base64: await readFileAsDataURL(file),
         mimeType: fileType || 'image/jpeg'
+      return {
+        filename: safeFilename,
+        base64: await readFileAsDataURL(file),
+        mimeType: file.type || 'application/octet-stream'
       };
     }
   }
