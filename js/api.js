@@ -26,11 +26,19 @@ const API = (() => {
     try {
       const res = await fetch(BASE_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json;charset=utf-8' },
+        // Gunakan text/plain agar request tetap "simple request"
+        // (menghindari preflight CORS yang sering gagal pada Google Apps Script)
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ action, ...data })
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return await res.json();
+
+      const text = await res.text();
+      try {
+        return JSON.parse(text);
+      } catch {
+        throw new Error('Respons server bukan JSON yang valid.');
+      }
     } catch (err) {
       console.error(`API POST [${action}] Error:`, err);
       throw err;

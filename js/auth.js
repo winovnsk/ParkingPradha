@@ -114,7 +114,8 @@ const Auth = (() => {
         Utils.showToast(res.message, 'error');
       }
     } catch (err) {
-      Utils.showToast('Gagal terhubung ke server.', 'error');
+      console.error('Login error:', err);
+      Utils.showToast(`Gagal terhubung ke server (${err.message || 'network error'}).`, 'error');
     } finally {
       Utils.setLoading(btn, false);
     }
@@ -202,7 +203,8 @@ const Auth = (() => {
         Utils.showToast(res.message, 'error');
       }
     } catch (err) {
-      Utils.showToast('Gagal terhubung ke server.', 'error');
+      console.error('Register error:', err);
+      Utils.showToast(`Gagal terhubung ke server (${err.message || 'network error'}).`, 'error');
     } finally {
       Utils.setLoading(btn, false);
     }
