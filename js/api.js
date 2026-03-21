@@ -26,7 +26,9 @@ const API = (() => {
     try {
       const res = await fetch(BASE_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json;charset=utf-8' },
+        // Google Apps Script tidak menangani preflight OPTIONS dengan baik.
+        // Pakai text/plain agar request tetap simple (tanpa preflight CORS).
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ action, ...data })
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
