@@ -719,7 +719,8 @@ function createBooking(payload) {
   // Upload bukti transfer ke Google Drive
   let buktiUrl = '';
   try {
-    buktiUrl = _uploadToDrive(bukti_transfer_base64, bukti_filename || 'bukti_transfer.jpg');
+    const uploadResult = _uploadToDrive(bukti_transfer_base64, bukti_filename || 'bukti_transfer.jpg');
+    buktiUrl = uploadResult.url;
   } catch (err) {
     return { success: false, message: 'Gagal mengunggah bukti transfer. Silakan coba lagi.' };
   }
@@ -820,7 +821,8 @@ function extendBooking(payload) {
   // Upload bukti
   let buktiUrl = '';
   try {
-    buktiUrl = _uploadToDrive(bukti_transfer_base64, bukti_filename || 'bukti_perpanjangan.jpg');
+    const uploadResult = _uploadToDrive(bukti_transfer_base64, bukti_filename || 'bukti_perpanjangan.jpg');
+    buktiUrl = uploadResult.url;
   } catch (err) {
     return { success: false, message: 'Gagal mengunggah bukti transfer. Silakan coba lagi.' };
   }
@@ -1048,7 +1050,8 @@ function addInvestorReturn(payload) {
 
   let buktiUrl = '';
   try {
-    buktiUrl = _uploadToDrive(bukti_transfer_base64, bukti_filename || 'bukti_investor.jpg');
+    const uploadResult = _uploadToDrive(bukti_transfer_base64, bukti_filename || 'bukti_investor.jpg');
+    buktiUrl = uploadResult.url;
   } catch (err) {
     return { success: false, message: 'Gagal mengunggah bukti transfer investor. Silakan coba lagi.' };
   }
@@ -1339,17 +1342,63 @@ function _uploadToDrive(base64Data, filename) {
     }
 
     const decoded = Utilities.base64Decode(cleanBase64);
-    const blob = Utilities.newBlob(decoded, mimeType, filename);
+    const safeFilename = _buildUploadFilename(filename, mimeType);
+    const blob = Utilities.newBlob(decoded, mimeType, safeFilename);
 
     const folder = DriveApp.getFolderById(DRIVE_FOLDER_ID);
     const file = folder.createFile(blob);
     file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
 
-    return `https://drive.google.com/file/d/${file.getId()}/view?usp=drivesdk`;
+    const fileId = file.getId();
+    const resourceKey = file.getResourceKey ? file.getResourceKey() : '';
+    const openUrl = resourceKey
+      ? `https://drive.google.com/file/d/${fileId}/view?resourcekey=${encodeURIComponent(resourceKey)}`
+      : `https://drive.google.com/file/d/${fileId}/view?usp=drivesdk`;
+
+    return {
+      file_id: fileId,
+      filename: safeFilename,
+      url: openUrl
+    };
   } catch (err) {
     Logger.log('Upload error: ' + err.message);
     throw new Error('UPLOAD_FAILED');
   }
+}
+
+
+/**
+ * Menyusun nama file upload agar konsisten & aman
+ */
+function _buildUploadFilename(filename, mimeType) {
+  const extensionByMime = {
+    'image/jpeg': 'jpg',
+    'image/jpg': 'jpg',
+    'image/png': 'png',
+    'image/webp': 'webp',
+    'application/pdf': 'pdf'
+  };
+
+  const fallbackExtension = extensionByMime[mimeType] || 'bin';
+  const rawName = (filename || '').toString().trim();
+
+  let nameWithoutExt = rawName;
+  let ext = fallbackExtension;
+
+  const dotIndex = rawName.lastIndexOf('.');
+  if (dotIndex > 0) {
+    nameWithoutExt = rawName.substring(0, dotIndex);
+    ext = rawName.substring(dotIndex + 1).toLowerCase() || fallbackExtension;
+  }
+
+  const safeName = (nameWithoutExt || 'bukti_transfer')
+    .replace(/[^a-zA-Z0-9-_ ]/g, '')
+    .trim()
+    .replace(/\s+/g, '_')
+    .substring(0, 60) || 'bukti_transfer';
+
+  const timestamp = Utilities.formatDate(new Date(), 'Asia/Jakarta', 'yyyyMMdd_HHmmss');
+  return `${safeName}_${timestamp}.${ext}`;
 }
 
 /**
