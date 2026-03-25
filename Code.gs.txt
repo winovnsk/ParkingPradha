@@ -651,12 +651,30 @@ function getAvailability() {
 
 function getParkingSpots(type) {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const sheet = ss.getSheetByName(SHEET.PARKING_SPOTS);
-  const data = _getSheetData(sheet);
+  const spotSheet = ss.getSheetByName(SHEET.PARKING_SPOTS);
+  const trxSheet = ss.getSheetByName(SHEET.TRANSACTIONS);
+  
+  const spotsData = _getSheetData(spotSheet);
+  const trxData = _getSheetData(trxSheet);
 
-  let spots = data;
+  // Cari transaksi yang statusnya Active untuk memetakan sisa durasi (end_date)
+  const activeTrx = trxData.filter(r => r.status === 'Active');
+
+  let spots = spotsData.map(spot => {
+    if (spot.status === 'Booked') {
+      // Temukan transaksi aktif spesifik untuk lahan (spot) ini.
+      // Jika ada lebih dari satu yang tercatat, ambil yang endDate-nya paling terakhir.
+      const currentTrx = activeTrx.filter(t => t.spot_id === spot.spot_id)
+                                  .sort((a, b) => new Date(b.end_date) - new Date(a.end_date))[0];
+      if (currentTrx) {
+        spot.end_date = currentTrx.end_date;
+      }
+    }
+    return spot;
+  });
+
   if (type) {
-    spots = data.filter(r => r.type === type);
+    spots = spots.filter(r => r.type === type);
   }
 
   return { success: true, data: spots };
@@ -669,8 +687,8 @@ function getParkingSpots(type) {
 /**
  * CREATE BOOKING
  * Payload: {
- *   user_id, spots: [{ spot_id, plat_nomor, merk_kendaraan }],
- *   bulan_sewa, bukti_transfer_base64, bukti_filename
+ * user_id, spots: [{ spot_id, plat_nomor, merk_kendaraan }],
+ * bulan_sewa, bukti_transfer_base64, bukti_filename
  * }
  * Maksimal 4 spot dalam 1 transaksi
  */
