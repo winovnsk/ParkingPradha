@@ -313,12 +313,18 @@ const App = (() => {
   function renderSpots(spots) {
     const grid = document.getElementById('spotsGrid');
     grid.innerHTML = spots.map(s => {
-      const cls = s.status === 'Available' ? 'available' : 'booked';
+      const isAvail = s.status === 'Available';
+      const cls = isAvail ? 'available' : 'booked';
+      const icon = isAvail ? '<i class="fas fa-parking"></i>' : '<i class="fas fa-car-side"></i>';
+      // Tambahkan event onclick memanggil handleSpotClick
+      const action = `onclick="App.handleSpotClick('${s.spot_id}', '${s.type}', ${s.price}, '${s.status}', '${s.end_date || ''}')"`;
+
       return `
-        <div class="spot-card ${cls}">
+        <div class="spot-card ${cls}" ${action} title="${isAvail ? 'Klik untuk Sewa Lahan' : 'Lihat Info Durasi'}">
+          <div class="spot-icon">${icon}</div>
           <div class="spot-id">${s.spot_id}</div>
           <div class="spot-type">${s.type}</div>
-          <div class="spot-status">${s.status === 'Available' ? 'Tersedia' : 'Terisi'}</div>
+          <div class="spot-status">${isAvail ? 'Tersedia' : 'Terisi'}</div>
         </div>
       `;
     }).join('');
@@ -332,6 +338,69 @@ const App = (() => {
 
     const filtered = type === 'all' ? _allSpots : _allSpots.filter(s => s.type === type);
     renderSpots(filtered);
+  }
+
+  function handleSpotClick(spotId, type, price, status, endDateStr) {
+    if (status === 'Available') {
+      // 1. Jika Lahan Tersedia (Klik untuk Sewa)
+      if (!Auth.isLoggedIn()) {
+        Utils.showToast('Silakan masuk/login terlebih dahulu untuk menyewa lahan.', 'info');
+        Auth.showLoginModal();
+        return;
+      }
+      
+      // Buka wizard booking dan atur tipe area
+      Booking.start(type);
+      
+      // Berikan jeda sebentar agar modal form selesai di-render
+      // Kemudian otomatis tandai spot tersebut
+      setTimeout(() => {
+        Booking.toggleSpot(spotId, type, price);
+        Utils.showToast(`Lahan ${spotId} berhasil dipilih!`, 'success');
+      }, 350);
+      
+    } else {
+      // 2. Jika Lahan Terisi (Tampilkan Popup Sisa Waktu)
+      let endDate;
+      let isMock = false;
+      
+      // Cek apakah API backend mengembalikan data tanggal akhir sewa
+      if (endDateStr && endDateStr !== 'undefined' && endDateStr !== '') {
+        endDate = new Date(endDateStr);
+      } else {
+        // Fallback UI: Jika backend belum mengirimkan data end_date,
+        // Buat tanggal dummy / perkiraan untuk UI interaktif.
+        const randomDays = Math.floor(Math.random() * 25) + 5;
+        endDate = new Date();
+        endDate.setDate(endDate.getDate() + randomDays);
+        isMock = true;
+      }
+      
+      const now = new Date();
+      const diffTime = endDate - now;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      const html = `
+        <div class="text-center" style="padding: 1rem 0">
+          <div style="width:72px;height:72px;background:#fee2e2;color:#ef4444;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;font-size:2.2rem;box-shadow:0 10px 15px -3px rgba(239,68,68,0.2)">
+            <i class="fas fa-car-side"></i>
+          </div>
+          <h2 style="margin-bottom: 0.25rem;">Lahan ${spotId}</h2>
+          <span class="status-badge expired" style="margin-bottom: 1.5rem; display: inline-block; background: var(--danger); color: #fff;">Sedang Disewa</span>
+          
+          <div style="background:var(--bg-secondary); border-radius:var(--radius-lg); padding:1.5rem; margin-bottom:1.5rem; border: 1px solid var(--border)">
+            <p style="font-size:0.9rem; color:var(--text-secondary); margin-bottom:0.5rem">Estimasi Sisa Durasi:</p>
+            <h3 style="font-size:2.8rem; font-weight:900; color:var(--text-primary); margin:0; line-height:1">${diffDays > 0 ? diffDays : 0} <span style="font-size:1.1rem;font-weight:600;color:var(--text-secondary)">Hari</span></h3>
+            <p style="font-size:0.9rem; color:var(--text-tertiary); margin-top:0.75rem"><i class="fas fa-calendar-alt"></i> Berakhir: <strong>${Utils.formatDate(endDate.toISOString())}</strong></p>
+          </div>
+          
+          ${isMock ? '<p style="font-size:0.75rem;color:var(--warning);margin-bottom:1.25rem;text-align:left;background:#fef3c7;padding:0.75rem;border-radius:var(--radius-sm)"><i class="fas fa-info-circle"></i> <strong>Mode Pratinjau:</strong> Sisa hari ini adalah simulasi UI karena pengaturan data API backend belum disinkronisasi sepenuhnya.</p>' : ''}
+          
+          <button class="btn btn-outline btn-block btn-lg" onclick="App.closeModal()">Tutup Info</button>
+        </div>
+      `;
+      App.openModal(html);
+    }
   }
 
   async function loadFooterContacts() {
@@ -371,6 +440,7 @@ const App = (() => {
     toggleUserMenu, toggleWA,
     filterSpots, showReviewForm,
     _setRating, _submitReview,
+    handleSpotClick,
     _currentRating: 0
   };
 })();
