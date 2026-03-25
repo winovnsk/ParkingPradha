@@ -3,7 +3,7 @@
  */
 const API = (() => {
   // ⚠️ GANTI URL INI dengan URL deploy Google Apps Script Anda
-  const BASE_URL = 'https://script.google.com/macros/s/AKfycbwuQ2_JtAQ5pXtJoGxHZEN2kKrPVDJYDBJVAZfUxC4CKdJzk57prePjnhbasVKLydu-/exec';
+  const BASE_URL = 'https://script.google.com/macros/s/AKfycbxGTniq1Jq8sQM_eAaayjHpwtvmhV6MVpQbVT6Piv2vPF5DLB0IFfrgP42uQIO3dzT_/exec';
 
   async function get(action, params = {}) {
     const url = new URL(BASE_URL);
