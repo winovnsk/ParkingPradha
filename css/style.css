@@ -687,6 +687,7 @@ main { padding-top: 64px; }
   border-radius: var(--radius-lg);
   padding: 1.75rem;
   display: flex; align-items: center; gap: 1.25rem;
+  box-shadow: var(--shadow-sm);
 }
 
 .avail-card-icon {
@@ -709,17 +710,45 @@ main { padding-top: 64px; }
 
 .spots-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(135px, 1fr));
+  gap: 1.25rem;
 }
 
 .spot-card {
-  padding: 1rem;
-  border-radius: var(--radius);
+  padding: 1.5rem 1rem;
+  border-radius: var(--radius-lg);
   text-align: center;
-  border: 2px solid var(--border);
+  border: 2px dashed var(--border);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-card);
+}
+
+/* Garis pembatas parkir atas */
+.spot-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 5px;
+  background: var(--border);
+  opacity: 0.5;
   transition: var(--transition);
-  cursor: default;
+}
+
+.spot-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+.spot-icon {
+  font-size: 2.25rem;
+  margin-bottom: 0.5rem;
+  transition: var(--transition);
 }
 
 .spot-card.available {
@@ -727,30 +756,52 @@ main { padding-top: 64px; }
   background: #f0fdf4;
 }
 
+.spot-card.available::before { background: var(--success); opacity: 1; }
+.spot-card.available .spot-icon { color: var(--success); }
+
+.spot-card.available:hover {
+  border-style: solid;
+  box-shadow: 0 12px 20px -5px rgba(16, 185, 129, 0.25);
+  transform: translateY(-6px) scale(1.02);
+}
+
 .spot-card.booked {
   border-color: var(--danger);
-  background: #fef2f2;
-  opacity: 0.7;
+  background: #fff5f5;
+  border-style: solid;
+  opacity: 0.85;
+}
+
+.spot-card.booked::before { background: var(--danger); opacity: 1; }
+.spot-card.booked .spot-icon { color: var(--danger); }
+
+.spot-card.booked:hover {
+  opacity: 1;
+  box-shadow: 0 10px 20px -5px rgba(239, 68, 68, 0.2);
 }
 
 .spot-card .spot-id {
-  font-size: 1rem; font-weight: 800;
-  margin-bottom: 0.25rem;
+  font-size: 1.25rem; font-weight: 900;
+  color: var(--text-primary);
+  margin-bottom: 0.15rem;
+  letter-spacing: 0.05em;
 }
 
 .spot-card .spot-type {
-  font-size: 0.7rem; font-weight: 600;
+  font-size: 0.7rem; font-weight: 700;
   text-transform: uppercase;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
   letter-spacing: 0.05em;
+  margin-bottom: 0.85rem;
 }
 
 .spot-card .spot-status {
   display: inline-block;
-  margin-top: 0.4rem;
-  font-size: 0.7rem; font-weight: 600;
-  padding: 0.15rem 0.6rem;
+  font-size: 0.7rem; font-weight: 700;
+  padding: 0.25rem 0.85rem;
   border-radius: var(--radius-full);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .spot-card.available .spot-status { background: var(--success); color: #fff; }
