@@ -1,8 +1,8 @@
 // ============================================================
 // ⚙️ KONFIGURASI UTAMA
 // ============================================================
-const SPREADSHEET_ID = '1gpLgAkN0Vf5LsohxHoA8Hcrug_oLNBvE7ObIJc5oofY';
-const DRIVE_FOLDER_ID = '13bXPdfhUCsycid_svPfg2IQ-hpgp67Do';
+const SPREADSHEET_ID = 'gantisendiri';
+const DRIVE_FOLDER_ID = 'gantisendiri';
 
 const SHEET = {
   USERS: 'USERS',
@@ -1346,14 +1346,21 @@ function _uploadToDrive(base64Data, filename) {
     const blob = Utilities.newBlob(decoded, mimeType, safeFilename);
 
     const folder = DriveApp.getFolderById(DRIVE_FOLDER_ID);
+    
+    // 1. File berhasil dibuat di Drive
     const file = folder.createFile(blob);
-    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
 
+    // 2. PERBAIKAN: Bungkus pengaturan akses publik agar tidak membuat script crash
+    try {
+      file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    } catch (shareErr) {
+      // Jika error (misal karena limitasi Google Workspace), abaikan dan lanjut
+      Logger.log('Info: Tidak dapat mengatur hak akses publik: ' + shareErr.message);
+    }
+
+    // 3. PERBAIKAN: Gunakan fungsi getUrl() bawaan yang lebih aman dan anti-gagal
     const fileId = file.getId();
-    const resourceKey = file.getResourceKey ? file.getResourceKey() : '';
-    const openUrl = resourceKey
-      ? `https://drive.google.com/file/d/${fileId}/view?resourcekey=${encodeURIComponent(resourceKey)}`
-      : `https://drive.google.com/file/d/${fileId}/view?usp=drivesdk`;
+    const openUrl = file.getUrl(); 
 
     return {
       file_id: fileId,
@@ -1365,7 +1372,6 @@ function _uploadToDrive(base64Data, filename) {
     throw new Error('UPLOAD_FAILED');
   }
 }
-
 
 /**
  * Menyusun nama file upload agar konsisten & aman
